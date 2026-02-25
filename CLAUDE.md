@@ -71,6 +71,20 @@ Three demo SmartHomes are always available: `DE-DEMO`, `FR-DEMO`, `BE-DEMO`. Cro
 
 The DHC core ontology (`dhc-core.schema.ttl`) lives in `repos/modeler/semantic-core/`. It defines the domain vocabulary (classes like `RealEstate`, `Room`, `Circuit`, `Sensor`) used by all apps. The ontology follows semantic versioning (`model-vX.Y.Z`) and is parsed at build time.
 
+## Key Rules
+
+### No Double Maintenance
+
+Documentation, specs, and config files must live in **exactly one place**. When content is moved to this umbrella repo, delete the original. Never maintain the same file in two repos. If an app-level CLAUDE.md references a doc, point to this repo's copy rather than duplicating.
+
+### Single Source of Truth for Specs
+
+Release specs live in `docs/specs/vX.Y.Z.md` — one living document per target release. See `docs/specs/TEMPLATE.md` for the format. Existing non-release-specific specs (design docs, ontology extensions) remain as standalone files.
+
+### ADRs for Architectural Decisions
+
+Significant architectural decisions are documented in `docs/adr/` using numbered ADR files. When making a decision that affects multiple repos or sets a lasting pattern, write an ADR.
+
 ## Cross-Repo Conventions
 
 ### Branches
@@ -133,8 +147,17 @@ git checkout stage
 ## Documentation
 
 - `docs/architecture/` — Platform architecture (environment strategy, auth flow, Amplify backend integration, data model)
-- `docs/specs/` — Feature specifications (modeler block design, T-BOX stakeholder extension)
-- `docs/adr/` — Architecture Decision Records
+- `docs/specs/` — Release specs (`vX.Y.Z.md`) and standalone feature specs. See `TEMPLATE.md` for format.
+- `docs/adr/` — Architecture Decision Records:
+  - 0001: Multi-repo with shared backend
+  - 0002: Gatsby 5 + React 18 frontend stack
+  - 0003: Amplify Gen1 backend with Gen2 frontend imports
+  - 0004: Environment-variable-driven configuration
+  - 0005: Cognito auth with group-based access control
+  - 0006: SmartHome ID as tenant partition key
+  - 0007: Semantic core ontology in modeler repo
+  - 0008: Umbrella repo with git submodules
+  - 0009: Single spec document per target release
 
 ## Deployment
 
