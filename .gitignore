@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# Gatsby
+.cache/
+public/
+
+# Environment & secrets
+.env*
+!.env.example
+src/aws-exports.js
+codecommit
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# IDE
+.idea/
+.vscode/
+*.code-workspace

@@ -1,0 +1,9 @@
+[submodule "repos/portal"]
+	path = repos/portal
+	url = https://github.com/DigitalHome-cloud/digitalhome-cloud-portal.git
+[submodule "repos/designer"]
+	path = repos/designer
+	url = https://github.com/DigitalHome-cloud/digitalhome-cloud-designer.git
+[submodule "repos/modeler"]
+	path = repos/modeler
+	url = https://github.com/DigitalHome-cloud/digitalhome-cloud-modeler.git
