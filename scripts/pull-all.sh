@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Pull latest changes in each sub-repo.
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
+_ORIG_DIR="$(pwd)"
 
 REPOS=("portal" "designer" "modeler")
 
@@ -21,5 +22,8 @@ for repo in "${REPOS[@]}"; do
     echo ""
   fi
 done
+
+cd "$_ORIG_DIR"
+unset _ORIG_DIR
 
 echo "Done."

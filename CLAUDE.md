@@ -158,6 +158,7 @@ git checkout stage
   - 0007: Semantic core ontology in modeler repo
   - 0008: Umbrella repo with git submodules
   - 0009: Single spec document per target release
+  - 0010: S3 bucket structure for global and tenant content
 
 ## Deployment
 
