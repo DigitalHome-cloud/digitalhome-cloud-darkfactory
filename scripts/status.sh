@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Show git status and recent commits across all sub-repos.
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
+_ORIG_DIR="$(pwd)"
 
 REPOS=("portal" "designer" "modeler")
 
@@ -31,3 +32,6 @@ for repo in "${REPOS[@]}"; do
     echo ""
   fi
 done
+
+cd "$_ORIG_DIR"
+unset _ORIG_DIR

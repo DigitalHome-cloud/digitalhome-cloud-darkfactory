@@ -7,8 +7,9 @@
 
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
+_ORIG_DIR="$(pwd)"
 
 echo "Starting DigitalHome.Cloud dev servers..."
 echo "  Portal:   http://localhost:8000"
@@ -19,8 +20,11 @@ echo ""
 # Trap Ctrl+C to kill all background jobs
 trap 'echo "Stopping all servers..."; kill 0; exit 0' INT TERM
 
-cd "$ROOT_DIR/repos/portal"   && yarn develop &
-cd "$ROOT_DIR/repos/designer" && yarn develop &
-cd "$ROOT_DIR/repos/modeler"  && yarn develop &
+(cd "$ROOT_DIR/repos/portal"   && yarn develop) &
+(cd "$ROOT_DIR/repos/designer" && yarn develop) &
+(cd "$ROOT_DIR/repos/modeler"  && yarn develop) &
 
 wait
+
+cd "$_ORIG_DIR"
+unset _ORIG_DIR
