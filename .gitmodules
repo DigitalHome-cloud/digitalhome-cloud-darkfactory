@@ -10,3 +10,6 @@
 	path = repos/modeler
 	url = https://github.com/DigitalHome-cloud/digitalhome-cloud-modeler.git
 	branch = main
+[submodule "repos/digital-twin-demo"]
+	path = repos/digital-twin-demo
+	url = https://github.com/DigitalHome-cloud/dhc-digital-twin-demo.git

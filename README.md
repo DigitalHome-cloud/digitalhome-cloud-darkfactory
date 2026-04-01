@@ -20,6 +20,7 @@ git submodule update --init --recursive
 | Portal | `repos/portal/` | 8000 | [portal.digitalhome.cloud](https://portal.digitalhome.cloud) |
 | Designer | `repos/designer/` | 8001 | [designer.digitalhome.cloud](https://designer.digitalhome.cloud) |
 | Modeler | `repos/modeler/` | 8002 | [modeler.digitalhome.cloud](https://modeler.digitalhome.cloud) |
+| Digital Twin Demo | `repos/digital-twin-demo/` | — | [GitHub](https://github.com/DigitalHome-cloud/dhc-digital-twin-demo) |
 
 All apps are Gatsby 5 / React 18 static sites sharing a common AWS Amplify Gen1 backend (Cognito, AppSync, DynamoDB, S3).
 

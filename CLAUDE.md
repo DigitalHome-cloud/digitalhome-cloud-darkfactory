@@ -33,6 +33,7 @@ Each sub-repo has its own `CLAUDE.md` with app-specific details. **Always read t
 | Portal | `repos/portal/` | 8000 | `portal.digitalhome.cloud` | `repos/portal/CLAUDE.md` |
 | Designer | `repos/designer/` | 8001 | `designer.digitalhome.cloud` | `repos/designer/CLAUDE.md` |
 | Modeler | `repos/modeler/` | 8002 | `modeler.digitalhome.cloud` | `repos/modeler/CLAUDE.md` |
+| Digital Twin Demo | `repos/digital-twin-demo/` | — | GitHub repo | `repos/digital-twin-demo/CLAUDE.md` |
 
 ## Platform Architecture
 
