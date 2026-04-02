@@ -47,27 +47,36 @@ public/
 
 ```
  MODELER                          S3 BUCKET                          DESIGNER
- (build-time)                     (public/)                          (runtime)
+ (build-time + runtime)           (public/)                          (runtime)
 
  +-----------------------+        +---------------------------+      +------------------------+
  | TTL source files      |        | ontology/                 |      | toolboxLoader.js       |
  |                       |        |                           |      |                        |
- | dhc-core.schema.ttl   | -----> | latest/                   | ---> | fetchToolboxFromS3()   |
- | modules/*.ttl         | write  |   blockly-blocks.json     | read |   blockly-blocks.json  |
+ | dhc-core.schema.ttl   |        | latest/                   | ---> | fetchToolboxFromS3()   |
+ | modules/*.ttl         |        |   blockly-blocks.json     | read |   blockly-blocks.json  |
  | module-manifest.json  |        |   blockly-toolbox.json    |      |   blockly-toolbox.json |
  |                       |        |   ontology-graph.json     |      |                        |
  | scripts/              |        |   context.jsonld          |      | Falls back to local    |
  |  parse-ontology.js    |        |   modules/                |      | src/data/ on localhost |
  |  generate-blockly-    |        |     module-manifest.json  |      +------------------------+
  |    toolbox.js         |        |     *.ttl                 |
- |  publish-ontology.js  |        |                           |
- +-----------------------+        | v1.1.1/                   |
-                                  |   (same as latest/)       |
-         Amplify CI/CD:           |                           |
-         parse-ontology           +---------------------------+
-         generate-blockly-toolbox
-         publish-ontology  <------+
-         gatsby build
+ +-----------------------+        |                           |
+                                  | v1.1.1/                   |
+  Amplify CI/CD (build-time):     |   (same as latest/)       |
+    parse-ontology                |                           |
+    generate-blockly-toolbox      +---------------------------+
+    gatsby build                         ^
+                                         | write (Amplify Storage)
+  In-app Publish (runtime):              |
+    /publish/ page ----------------------+
+    (admin-only, Cognito creds)
+    uploads: ontology-graph.json,
+             blockly-blocks.json,
+             blockly-toolbox.json
+    to both v{VERSION}/ and latest/
+
+  CI/CD-only artifacts (not from browser):
+    context.jsonld, module TTLs, module-manifest.json
 
 
                                   +---------------------------+      +------------------------+
@@ -95,8 +104,10 @@ public/
 
 | S3 Path | Writer | Trigger |
 |---------|--------|---------|
-| `ontology/latest/*` | Modeler | `npm run publish-ontology` (Amplify CI/CD) |
-| `ontology/v{X.Y.Z}/*` | Modeler | `npm run publish-ontology` (Amplify CI/CD) |
+| `ontology/latest/*` (JSON) | Modeler | Admin clicks "Publish to S3" on `/publish/` page |
+| `ontology/v{X.Y.Z}/*` (JSON) | Modeler | Admin clicks "Publish to S3" on `/publish/` page |
+| `ontology/latest/*` (TTL, JSONLD) | Modeler | `scripts/publish-ontology.js` run manually (local CLI) |
+| `ontology/v{X.Y.Z}/*` (TTL, JSONLD) | Modeler | `scripts/publish-ontology.js` run manually (local CLI) |
 | `smarthomes/{id}/design/*` | Designer | User saves workspace or shell generator runs |
 
 ## Who Reads What
@@ -119,14 +130,20 @@ public/
 ```
 1. Author edits TTL in repos/modeler/semantic-core/
 2. Push to stage/main triggers Amplify build
-3. Amplify build pipeline:
+3. Amplify build pipeline (automated):
      npm run parse-ontology          --> src/data/ontology-graph.json
      npm run generate-blockly-toolbox --> src/data/blockly-blocks.json
                                          src/data/blockly-toolbox.json
-     npm run publish-ontology        --> S3: ontology/v{ver}/* + ontology/latest/*
-     npm run build                   --> Gatsby static site
-4. Designer fetches latest from S3 at runtime
-5. Local fallback files in designer/src/data/ used only on localhost
+     npm run build                   --> Gatsby static site with artifacts baked in
+4. Admin publishes to S3 via the Modeler /publish/ page:
+     ontology-graph.json, blockly-blocks.json, blockly-toolbox.json
+     --> S3: ontology/v{ver}/* + ontology/latest/*
+     (uses Amplify Storage with Cognito credentials, gated by dhc-admins group)
+5. TTL source files and context.jsonld:
+     --> Published via scripts/publish-ontology.js (manual, local CLI with AWS creds)
+     --> Or added to CI/CD once Amplify build role has S3 write permissions
+6. Designer fetches latest from S3 at runtime
+7. Local fallback files in designer/src/data/ used only on localhost
 ```
 
 ### Design Artifacts (A-Box)
@@ -168,7 +185,9 @@ files may be stale. On localhost, it silently falls back to local files.
 
 | File | App | Role |
 |------|-----|------|
-| `modeler/scripts/publish-ontology.js` | Modeler | Uploads ontology artifacts to S3 |
+| `modeler/scripts/publish-ontology.js` | Modeler | Uploads all ontology artifacts to S3 (manual CLI) |
+| `modeler/src/utils/s3.js` | Modeler | Amplify Storage operations (list, download, upload) |
+| `modeler/src/components/OntologyPublisher.js` | Modeler | In-app S3 browser + admin publish controls |
 | `modeler/scripts/parse-ontology.js` | Modeler | Generates ontology-graph.json from TTL |
 | `modeler/scripts/generate-blockly-toolbox.js` | Modeler | Generates blockly-blocks/toolbox.json |
 | `designer/src/utils/s3.js` | Designer | All S3 read/write operations |
