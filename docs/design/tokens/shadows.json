@@ -1,0 +1,19 @@
+{
+  "$schema": "dhc-design-tokens-v1",
+  "version": "1.0.0",
+  "description": "DigitalHome.Cloud shadow and glow tokens",
+
+  "shadow": {
+    "card":      { "value": "0 18px 40px rgba(15, 23, 42, 0.7)", "usage": "Card/tile hover lift shadow" },
+    "dropdown":  { "value": "0 4px 12px rgba(0, 0, 0, 0.3)", "usage": "Dropdown menus, popover panels" },
+    "header":    { "value": "none", "usage": "Header uses border-bottom, not shadow" }
+  },
+
+  "glow": {
+    "viewDot": { "value": "0 0 6px currentColor", "usage": "Design view indicator dot glow" }
+  },
+
+  "blur": {
+    "header": { "value": "blur(10px)", "usage": "Header glass-morphism backdrop-filter" }
+  }
+}

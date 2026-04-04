@@ -33,6 +33,7 @@ Each sub-repo has its own `CLAUDE.md` with app-specific details. **Always read t
 | Portal | `repos/portal/` | 8000 | `portal.digitalhome.cloud` | `repos/portal/CLAUDE.md` |
 | Designer | `repos/designer/` | 8001 | `designer.digitalhome.cloud` | `repos/designer/CLAUDE.md` |
 | Modeler | `repos/modeler/` | 8002 | `modeler.digitalhome.cloud` | `repos/modeler/CLAUDE.md` |
+| Digital Twin Demo | `repos/digital-twin-demo/` | — | GitHub repo | `repos/digital-twin-demo/CLAUDE.md` |
 
 ## Platform Architecture
 
@@ -148,6 +149,7 @@ git checkout stage
 
 - `docs/architecture/` — Platform architecture (environment strategy, auth flow, Amplify backend integration, data model)
 - `docs/specs/` — Release specs (`vX.Y.Z.md`) and standalone feature specs. See `TEMPLATE.md` for format.
+- `docs/design/` — Platform-agnostic UX design guide (tokens, foundations, components, patterns, adaptation guides). See `docs/design/README.md`.
 - `docs/adr/` — Architecture Decision Records:
   - 0001: Multi-repo with shared backend
   - 0002: Gatsby 5 + React 18 frontend stack
@@ -161,6 +163,7 @@ git checkout stage
   - 0010: S3 bucket structure for global and tenant content
   - 0011: All GraphQL types in portal backend schema
   - 0012: Modular ontology architecture (Core + Norm Modules)
+  - 0013: Platform-agnostic design guide
 
 ## Deployment
 

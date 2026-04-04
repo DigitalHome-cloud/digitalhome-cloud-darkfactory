@@ -1,0 +1,24 @@
+{
+  "$schema": "dhc-design-tokens-v1",
+  "version": "1.0.0",
+  "description": "DigitalHome.Cloud motion and transition tokens",
+
+  "duration": {
+    "fast":   { "value": "0.12s", "ms": 120, "usage": "Card hover, tile transforms, border changes" },
+    "normal": { "value": "0.15s", "ms": 150, "usage": "Button hover, input focus, tab transitions, chevron rotation" },
+    "slow":   { "value": "0.25s", "ms": 250, "usage": "Overlay fade, panel expand (future)" }
+  },
+
+  "easing": {
+    "default":  { "value": "ease",     "usage": "General transitions" },
+    "out":      { "value": "ease-out", "usage": "Card lift, transform animations" }
+  },
+
+  "transition": {
+    "button":    { "value": "background 0.15s, border-color 0.15s",    "description": "Button state changes" },
+    "card":      { "value": "transform 0.12s ease-out, box-shadow 0.12s ease-out, border-color 0.12s ease-out, background 0.12s ease-out", "description": "Card hover lift" },
+    "input":     { "value": "border-color 0.15s",                      "description": "Input focus transition" },
+    "tab":       { "value": "color 0.15s, border-color 0.15s",         "description": "Tab bar active indicator" },
+    "chevron":   { "value": "transform 0.15s",                         "description": "Sidebar expand/collapse" }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "$schema": "dhc-design-tokens-v1",
+  "version": "1.0.0",
+  "description": "DigitalHome.Cloud border radius tokens",
+
+  "radius": {
+    "xs":   { "value": "0.25rem", "px": "4px",  "usage": "Inline code blocks" },
+    "sm":   { "value": "0.35rem", "px": "5.6px", "usage": "Small elements, inspector items" },
+    "md":   { "value": "0.45rem", "px": "7.2px", "usage": "Form inputs, inspector inputs" },
+    "base": { "value": "0.5rem",  "px": "8px",  "usage": "Buttons, alerts, code blocks" },
+    "lg":   { "value": "0.75rem", "px": "12px", "usage": "Logo mark, context menus, blockly menus" },
+    "xl":   { "value": "1.0rem",  "px": "16px", "usage": "Panels, cards (Designer/Modeler)" },
+    "2xl":  { "value": "1.25rem", "px": "20px", "usage": "Tiles, large cards (Portal)" },
+    "full": { "value": "999px",   "description": "Fully rounded — pills, badges, nav links, dropdowns" }
+  }
+}
