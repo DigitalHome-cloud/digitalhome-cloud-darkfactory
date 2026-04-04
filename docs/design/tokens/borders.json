@@ -1,0 +1,19 @@
+{
+  "$schema": "dhc-design-tokens-v1",
+  "version": "1.0.0",
+  "description": "DigitalHome.Cloud border tokens",
+
+  "width": {
+    "default":    { "value": "1px",  "usage": "Standard borders — cards, inputs, buttons, header" },
+    "thick":      { "value": "2px",  "usage": "Tab active indicator (bottom border)" },
+    "validation": { "value": "3px",  "usage": "Validation item left accent border" },
+    "dashed":     { "value": "1px dashed rgba(148, 163, 184, 0.5)", "usage": "Canvas/workspace placeholder border" }
+  },
+
+  "style": {
+    "card":    { "value": "1px solid rgba(148, 163, 184, 0.3)", "description": "Default card/panel border" },
+    "input":   { "value": "1px solid rgba(148, 163, 184, 0.4)", "description": "Form input border at rest" },
+    "header":  { "value": "1px solid rgba(148, 163, 184, 0.3)", "description": "Header bottom border" },
+    "sidebar": { "value": "1px solid rgba(148, 163, 184, 0.2)", "description": "Sidebar right/section borders" }
+  }
+}

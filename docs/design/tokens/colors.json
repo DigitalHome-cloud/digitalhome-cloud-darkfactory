@@ -1,0 +1,86 @@
+{
+  "$schema": "dhc-design-tokens-v1",
+  "version": "1.0.0",
+  "description": "DigitalHome.Cloud color tokens — dark-only theme",
+
+  "surface": {
+    "primary":   { "value": "#0f172a", "description": "Main app background (slate-900)" },
+    "deep":      { "value": "#020617", "description": "Deepest background — footer, inputs, graph canvas (slate-950)" },
+    "elevated":  { "value": "#1e293b", "description": "Elevated surfaces — cards, panels, header (slate-800)" },
+    "glass":     { "value": "rgba(15, 23, 42, 0.9)", "description": "Header glass-morphism backdrop" },
+    "card":      { "value": "radial-gradient(circle at top left, #1e293b, #020617)", "description": "Card/panel gradient background" },
+    "cardHover": { "value": "radial-gradient(circle at top left, #1f2937, #020617)", "description": "Card hover gradient" }
+  },
+
+  "text": {
+    "primary":   { "value": "#e5e7eb", "description": "Primary body text (gray-200)" },
+    "heading":   { "value": "#e2e8f0", "description": "Heading text (slate-200)" },
+    "secondary": { "value": "#9ca3af", "description": "Secondary text (gray-400)" },
+    "slate":     { "value": "#94a3b8", "description": "Muted slate text — labels, descriptions (slate-400)" },
+    "nav":       { "value": "#cbd5f5", "description": "Navigation link text" },
+    "muted":     { "value": "#64748b", "description": "Very muted text — placeholder, tertiary info (slate-500)" }
+  },
+
+  "border": {
+    "default":   { "value": "rgba(148, 163, 184, 0.3)", "description": "Default border (slate-400 @ 30%)" },
+    "subtle":    { "value": "rgba(148, 163, 184, 0.2)", "description": "Subtle border for secondary elements" },
+    "hover":     { "value": "rgba(148, 163, 184, 0.7)", "description": "Border on hover state" },
+    "focus":     { "value": "rgba(148, 163, 184, 0.4)", "description": "Input border at rest" }
+  },
+
+  "accent": {
+    "cyan":       { "value": "#0ea5e9", "description": "Primary accent — links, focus rings (sky-500)" },
+    "link":       { "value": "#38bdf8", "description": "Hyperlink color (sky-400)" },
+    "linkHover":  { "value": "#7dd3fc", "description": "Hyperlink hover (sky-300)" },
+    "code":       { "value": "#93c5fd", "description": "Inline code text (blue-300)" }
+  },
+
+  "action": {
+    "primary":       { "value": "#22c55e", "description": "Primary action color — save, confirm, active (green-500)" },
+    "primaryLight":  { "value": "#4ade80", "description": "Lighter green for badges, pills (green-400)" },
+    "primaryPale":   { "value": "#bbf7d0", "description": "Pale green for button text (green-200)" },
+    "primaryBg":     { "value": "rgba(34, 197, 94, 0.15)", "description": "Green tinted background" },
+    "primaryBorder": { "value": "rgba(34, 197, 94, 0.6)", "description": "Green border for primary buttons" }
+  },
+
+  "danger": {
+    "base":   { "value": "#ef4444", "description": "Error/danger (red-500)" },
+    "light":  { "value": "#fca5a5", "description": "Lighter error text (red-300)" },
+    "pale":   { "value": "#fecaca", "description": "Palest error (red-200)" },
+    "bg":     { "value": "rgba(239, 68, 68, 0.1)", "description": "Error background tint" },
+    "border": { "value": "rgba(239, 68, 68, 0.5)", "description": "Error border" }
+  },
+
+  "warning": {
+    "base":  { "value": "#f59e0b", "description": "Warning (amber-500)" },
+    "light": { "value": "#fde68a", "description": "Light warning (amber-200)" }
+  },
+
+  "info": {
+    "base":  { "value": "#3b82f6", "description": "Informational (blue-500)" },
+    "light": { "value": "#93c5fd", "description": "Light info (blue-300)" }
+  },
+
+  "gradient": {
+    "hero":     { "value": "linear-gradient(135deg, #22c55e, #0ea5e9)", "description": "Hero accent gradient (green-to-cyan)" },
+    "logoMark": { "value": "linear-gradient(135deg, #22c55e, #0ea5e9)", "description": "Logo mark gradient" }
+  },
+
+  "designView": {
+    "spatial":    { "value": "#22c55e", "label": "Spatial",    "description": "Rooms, zones, areas" },
+    "building":   { "value": "#f59e0b", "label": "Building",   "description": "Walls, doors, windows, structure" },
+    "electrical": { "value": "#3b82f6", "label": "Electrical", "description": "Circuits, outlets, panels" },
+    "plumbing":   { "value": "#06b6d4", "label": "Plumbing",   "description": "Pipes, fixtures, water" },
+    "heating":    { "value": "#ef4444", "label": "Heating",    "description": "HVAC, radiators, thermostats" },
+    "network":    { "value": "#a855f7", "label": "Network",    "description": "Ethernet, Wi-Fi, cabling" },
+    "governance": { "value": "#f97316", "label": "Governance", "description": "Compliance, norms, regulations" },
+    "automation": { "value": "#ec4899", "label": "Automation", "description": "Scenes, rules, automations" },
+    "shared":     { "value": "#e5e7eb", "label": "Shared",     "description": "Cross-view or unassigned" }
+  },
+
+  "capability": {
+    "actor":      { "value": "#a855f7", "description": "Actuator capability (purple-500)" },
+    "sensor":     { "value": "#22c55e", "description": "Sensor capability (green-500)" },
+    "controller": { "value": "#3b82f6", "description": "Controller capability (blue-500)" }
+  }
+}

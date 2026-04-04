@@ -1,0 +1,40 @@
+{
+  "$schema": "dhc-design-tokens-v1",
+  "version": "1.0.0",
+  "description": "DigitalHome.Cloud spacing and layout tokens",
+
+  "space": {
+    "1":  { "value": "0.15rem", "px": "2.4px",  "usage": "Minimal gaps, badge padding" },
+    "2":  { "value": "0.25rem", "px": "4px",    "usage": "Tight padding, small gaps" },
+    "3":  { "value": "0.35rem", "px": "5.6px",  "usage": "Button vertical padding, compact gaps" },
+    "4":  { "value": "0.5rem",  "px": "8px",    "usage": "Sidebar padding, panel gaps, input padding" },
+    "5":  { "value": "0.75rem", "px": "12px",   "usage": "Header padding, navigation gaps, form gaps" },
+    "6":  { "value": "1.0rem",  "px": "16px",   "usage": "Large gaps, tile padding, workspace gaps" },
+    "7":  { "value": "1.25rem", "px": "20px",   "usage": "Main content horizontal padding, grid gaps" },
+    "8":  { "value": "1.5rem",  "px": "24px",   "usage": "Section vertical spacing" },
+    "9":  { "value": "2.0rem",  "px": "32px",   "usage": "Main content top padding" },
+    "10": { "value": "3.0rem",  "px": "48px",   "usage": "Main content bottom padding" }
+  },
+
+  "container": {
+    "maxWidth":   { "value": "1280px", "description": "Maximum content width for all apps" },
+    "paddingX":   { "value": "1.25rem", "description": "Horizontal page padding" },
+    "paddingTop": { "value": "2rem", "description": "Main content top padding" },
+    "paddingBot": { "value": "3rem", "description": "Main content bottom padding" }
+  },
+
+  "grid": {
+    "workspaceGap":     { "value": "0", "description": "Gap in 3-column workspace (panels touch)" },
+    "dashboardGap":     { "value": "1rem", "description": "Gap between dashboard cards" },
+    "tileGridGap":      { "value": "1.25rem", "description": "Gap between tiles in auto-fit grid" },
+    "tileMinWidth":     { "value": "220px", "description": "Minimum tile width in auto-fit grid" },
+    "cardMinWidth":     { "value": "280px", "description": "Minimum card width in auto-fit grid" },
+    "sidebarWidth":     { "value": "240px", "description": "Left sidebar width (Designer/Modeler)" },
+    "inspectorWidth":   { "value": "280px", "description": "Right inspector panel width" },
+    "viewerPanelWidth": { "value": "300px", "description": "Right panel in viewer layout" }
+  },
+
+  "breakpoint": {
+    "tablet": { "value": "1024px", "description": "Stack columns vertically below this width" }
+  }
+}
