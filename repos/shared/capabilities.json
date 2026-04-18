@@ -1,0 +1,182 @@
+{
+  "version": "1.0.0",
+  "tiers": ["guest", "welcome", "standard", "professional"],
+  "tierGroups": {
+    "welcome": "dhc-welcome",
+    "standard": "dhc-standard",
+    "professional": "dhc-professional"
+  },
+  "capabilities": {
+    "platform.browse_demo": {
+      "description": "Browse DEMO homes (read-only)",
+      "minTier": "guest"
+    },
+    "platform.toggle_demo": {
+      "description": "Toggle 'show demo homes' visibility",
+      "minTier": "welcome"
+    },
+    "platform.see_own_homes": {
+      "description": "See own DHs in SmartHome Manager list/map",
+      "minTier": "welcome",
+      "constraints": {
+        "welcome": { "source": "indexeddb" }
+      }
+    },
+    "platform.cloud_save": {
+      "description": "Persistent cloud save (S3 + DynamoDB)",
+      "minTier": "standard"
+    },
+    "platform.local_save": {
+      "description": "Local save (browser IndexedDB)",
+      "minTier": "welcome"
+    },
+    "platform.export_bundle": {
+      "description": "Export DH as bundle (.zip)",
+      "minTier": "welcome"
+    },
+    "platform.import_bundle": {
+      "description": "Import DH bundle (.zip)",
+      "minTier": "welcome"
+    },
+
+    "create.new_home": {
+      "description": "Access the Create New Digital Home flow",
+      "minTier": "welcome",
+      "constraints": {
+        "welcome": { "persistence": "local" },
+        "standard": { "persistence": "cloud" },
+        "professional": { "persistence": "cloud" }
+      }
+    },
+    "create.pick_location": {
+      "description": "Pick location on map (geocoded)",
+      "minTier": "welcome"
+    },
+    "create.generate_id": {
+      "description": "Generate smartHomeId",
+      "minTier": "welcome",
+      "constraints": {
+        "welcome": { "scope": "local" },
+        "standard": { "scope": "cloud" },
+        "professional": { "scope": "cloud" }
+      }
+    },
+    "create.role_assignment": {
+      "description": "Receive companion RoleAssignment (Owner)",
+      "minTier": "welcome",
+      "constraints": {
+        "welcome": { "location": "bundle" },
+        "standard": { "location": "s3" },
+        "professional": { "location": "s3" }
+      }
+    },
+
+    "design.spatial": {
+      "description": "Spatial design view (Area, Floor, Space, Zone)",
+      "minTier": "welcome"
+    },
+    "design.building": {
+      "description": "Building envelope (walls, windows, roof, insulation)",
+      "minTier": "professional"
+    },
+    "design.electrical": {
+      "description": "Electrical design (circuits, distribution, protection)",
+      "minTier": "welcome",
+      "constraints": {
+        "welcome": { "components": "generic" },
+        "standard": { "components": "generic" },
+        "professional": { "components": "generic+custom" }
+      }
+    },
+    "design.plumbing": {
+      "description": "Plumbing design",
+      "minTier": "professional"
+    },
+    "design.hvac": {
+      "description": "Heating / HVAC design",
+      "minTier": "professional"
+    },
+    "design.network": {
+      "description": "Network design (LAN, WiFi, ZigBee, etc.)",
+      "minTier": "professional"
+    },
+    "design.automation": {
+      "description": "Automation design (Groups, Scenarios, Sensors, Actors)",
+      "minTier": "professional"
+    },
+    "design.emobility": {
+      "description": "E-Mobility design (EVs, charging stations)",
+      "minTier": "professional"
+    },
+    "design.governance": {
+      "description": "Governance (role assignments beyond Owner)",
+      "minTier": "professional"
+    },
+
+    "component.place_generic": {
+      "description": "Place generic components (platform catalog)",
+      "minTier": "welcome"
+    },
+    "component.define_custom": {
+      "description": "Define custom components / equipment types",
+      "minTier": "professional"
+    },
+    "component.import_catalog": {
+      "description": "Import 3rd-party catalog",
+      "minTier": "professional"
+    },
+    "component.attach_guideline": {
+      "description": "Attach ontology Guidelines to own content",
+      "minTier": "professional"
+    },
+
+    "collab.assign_roles": {
+      "description": "Assign roles to other agents (Designer, Installer, ...)",
+      "minTier": "professional"
+    },
+    "collab.share_readonly": {
+      "description": "Share DH read-only link",
+      "minTier": "standard"
+    },
+    "collab.share_coedit": {
+      "description": "Share DH for co-editing",
+      "minTier": "professional"
+    },
+    "collab.projects": {
+      "description": "Project-scoped work (dhc:Project)",
+      "minTier": "professional"
+    },
+
+    "library.browse": {
+      "description": "Browse component library",
+      "minTier": "guest"
+    },
+    "library.manage": {
+      "description": "Create/update/delete library items (admin)",
+      "minTier": "professional"
+    }
+  },
+  "quotas": {
+    "welcome": {
+      "maxHomesLocal": 1,
+      "maxHomesCloud": 0,
+      "maxSpacesPerHome": null,
+      "maxCircuitsPerHome": null,
+      "bundleImportSizeMb": 5
+    },
+    "standard": {
+      "maxHomesLocal": null,
+      "maxHomesCloud": 3,
+      "maxSpacesPerHome": 25,
+      "maxCircuitsPerHome": 40,
+      "bundleImportSizeMb": 20
+    },
+    "professional": {
+      "maxHomesLocal": null,
+      "maxHomesCloud": -1,
+      "maxSpacesPerHome": -1,
+      "maxCircuitsPerHome": -1,
+      "bundleImportSizeMb": 100
+    }
+  }
+}

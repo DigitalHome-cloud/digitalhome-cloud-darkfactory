@@ -13,3 +13,6 @@
 [submodule "repos/digital-twin-demo"]
 	path = repos/digital-twin-demo
 	url = https://github.com/DigitalHome-cloud/dhc-digital-twin-demo.git
+[submodule "repos/core"]
+	path = repos/core
+	url = https://github.com/DigitalHome-cloud/digitalhome-cloud-core.git

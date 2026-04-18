@@ -28,7 +28,8 @@ We created `digitalhome-cloud-darkfactory` as an **umbrella repo using git submo
 - Application repos are submodules under `repos/` (portal, designer, modeler)
 - Platform docs, specs, ADRs, and scripts live at the top level
 - `CLAUDE.md` provides the master guide for Claude Code, pointing to each sub-repo's CLAUDE.md
-- Helper scripts (`dev-start-all.sh`, `status.sh`, `pull-all.sh`) operate across all repos
+- Helper scripts (`sync-env.sh`, `dev-start-all.sh`, `dev-stop-all.sh`, `status.sh`, `pull-all.sh`) operate across all repos
+- The umbrella owns the single `amplify/` directory; per-repo copies are symlinks created by `sync-env.sh`
 
 ## Consequences
 

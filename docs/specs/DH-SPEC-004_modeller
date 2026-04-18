@@ -1,0 +1,117 @@
+Modeller application
+
+change menu
+Modeler to Model
+Bibliothèque remove 
+add build
+add validate
+Publier to publish
+
+We focus on building of the blockly components. toolbox and blocks.
+The modeller only works when looged in, also in dev mode
+the source files are read from the https://github.com/DigitalHome-cloud/digitalhome-cloud-core.git repository
+A new tool and menu "Config Manager" allows to choose the ontology verion. the user can chose between the stage or main branch, similar to the designer  SmartHome Manager
+
+the selected model is loaded in the Modeler viever either direct from the githup or cached on the S3
+the Inspector remqin as is
+
+
+a new build tool and menu shows the mapping of the T box elements with the Blockly elements 
+Nested connections "subClassOf" are build as nested loops 
+"belongs to xxx" like "belongs to zone" are Blockly values 
+the color coding is the same as the main categories
+a build button will generate the a box blockly runtine in related S3 modeller workdir location 
+
+
+A new tool and menu for validation is added, same as the Designer Blockly Design Workspace, allowing to test the toolbox and blocks; the inspector in this modeler tool becomes the configurator. it allows sdjustments on th eblocks and has a recomplie and publish button. The recompile will regenerqte the bolcks and toolbox in the s3 workdir. 
+
+The publisher will manage the final version
+
+so the finql menue will be
+Config Manager
+Modeler
+Blockly Builder 
+Publisher
+
+
+
+
+# Below an example 
+## Blockly JavaScript Definitions (v11+)
+
+```
+/**
+ * DH-SPEC-01: SmartHome Spatial Hierarchy
+ * Compatible with Blockly v11+
+ */
+
+// 1. ROOT: Real Estate
+Blockly.Blocks['smarthome_real_estate'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("🏠 Real Estate")
+        .appendField(new Blockly.FieldTextInput("My Property"), "NAME");
+    this.appendStatementInput("AREAS")
+        .setCheck("AreaType"); 
+    this.setColour(120); // Darkest Green
+    this.setTooltip("The root physical container for the property.");
+  }
+};
+
+// 2. BRANCH: Area (Physical subdivision like a Building or Annex)
+Blockly.Blocks['smarthome_area'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("📍 Area")
+        .appendField(new Blockly.FieldTextInput("Main Building"), "NAME")
+        .appendField("Floor")
+        .appendField(new Blockly.FieldNumber(0), "FLOOR");
+    this.appendStatementInput("SPACES")
+        .setCheck("SpaceType");
+    this.setPreviousStatement(true, "AreaType");
+    this.setNextStatement(true, "AreaType");
+    this.setColour(100); 
+    this.setTooltip("Physical subdivision of the property.");
+  }
+};
+
+// 3. LEAF: Space (Individual room or area)
+Blockly.Blocks['smarthome_space'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("🚪 Space")
+        .appendField(new Blockly.FieldTextInput("Kitchen"), "NAME")
+        .appendField("Surface")
+        .appendField(new Blockly.FieldNumber(15, 0), "SURFACE")
+        .appendField("m²");
+    
+    // Logical Many-to-Many grouping via Variables
+    this.appendDummyInput()
+        .appendField("🌐 Zone:")
+        .appendField(new Blockly.FieldVariable("None", null, ["Zone"]), "ZONE_VAR");
+
+    this.setPreviousStatement(true, "SpaceType");
+    this.setNextStatement(true, "SpaceType");
+    this.setColour(70); // Lightest Green
+    this.setTooltip("Specific room assigned to a logical Zone.");
+  }
+};
+
+```
+# Toolbox Implementation (XML)
+To enable the "Zone" variable functionality in your Gatsby Modeler, include this in your toolbox configuration:
+xml
+```
+
+<xml>
+  <category name="Spatial" colour="#2E7D32">
+    <block type="smarthome_real_estate"></block>
+    <block type="smarthome_area"></block>
+    <block type="smarthome_space"></block>
+  </category>
+  <category name="Zones" custom="VARIABLE" variabletype="Zone">
+    <button text="Create New Zone" callbackKey="CREATE_ZONE_BUTTON"></button>
+  </category>
+</xml>
+```
+
