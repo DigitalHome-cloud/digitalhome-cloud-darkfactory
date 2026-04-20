@@ -40,6 +40,9 @@ All apps use the same script, same env var names, and same `aws-exports.deployme
 
 ### Negative
 
-- Developers must run the generator script after `amplify pull` — easy to forget
 - 12+ env vars to keep in sync across Amplify Console environments
 - Gatsby's `GATSBY_` prefix requirement means env var names are verbose
+
+### Update (2026-04)
+
+The manual "run the generator after `amplify pull`" step has been eliminated. The umbrella repo now owns the single `amplify/` directory and `src/aws-exports.js`. Per-repo copies are replaced with **symlinks** managed by `scripts/sync-env.sh`, which also runs the generator script and `amplify codegen` for GraphQL types. Developers run `amplify pull` once at the umbrella root, then `./scripts/sync-env.sh` to fan config out to all apps.

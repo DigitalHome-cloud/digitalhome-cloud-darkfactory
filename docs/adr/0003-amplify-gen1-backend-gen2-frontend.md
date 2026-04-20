@@ -37,4 +37,4 @@ The bridge between them is the `aws-exports.deployment.js` pattern: a script rea
 
 - Hybrid setup is not well-documented by AWS — we had to figure out the config bridge ourselves
 - Some Amplify v6 features assume Gen2 backend conventions that don't exist in our Gen1 setup
-- The `generate-aws-config-from-master.js` script is a custom build step that every developer must run
+- The `generate-aws-config-from-master.js` script is a custom build step — now automated via `scripts/sync-env.sh` at the umbrella level

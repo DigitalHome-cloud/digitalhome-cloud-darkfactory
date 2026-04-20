@@ -21,15 +21,16 @@ The DigitalHome.Cloud platform consists of multiple frontend applications (Porta
 We chose **multi-repo with a shared Amplify Gen1 backend**, where:
 
 - Each app lives in its own GitHub repository (`digitalhome-cloud-portal`, `digitalhome-cloud-designer`, `digitalhome-cloud-modeler`)
-- The **portal repo owns the Amplify backend** (`amplify/` directory) — Cognito User Pool, Identity Pool, AppSync, DynamoDB, S3
+- The **umbrella repo owns the single Amplify backend** (`amplify/` directory, symlinked into each app by `scripts/sync-env.sh`) — Cognito User Pool, Identity Pool, AppSync, DynamoDB, S3
 - Other repos are **frontend-only consumers** that connect to the shared backend via environment variables
 - An **umbrella repo** (`digitalhome-cloud-darkfactory`) aggregates all app repos as git submodules for cross-repo development
 
 ### Configuration pattern
 
-All apps use the same `aws-exports.deployment.js` pattern:
-1. `amplify pull` generates `src/aws-exports.js` (gitignored, hardcoded values)
-2. `generate-aws-config-from-master.js` produces `src/aws-exports.deployment.js` (committed, env-var-driven) and `.env.development` (gitignored)
+The umbrella repo (`digitalhome-cloud-darkfactory`) owns the single `amplify/` directory and `src/aws-exports.js`. Per-repo copies are replaced with **symlinks** managed by `scripts/sync-env.sh`:
+
+1. `amplify pull` at the umbrella root generates `amplify/` + `src/aws-exports.js` (gitignored)
+2. `scripts/sync-env.sh` symlinks `amplify/` and `src/aws-exports.js` into each repo, runs `generate-aws-config-from-master.js` (producing `aws-exports.deployment.js` + `.env.development`), and runs `amplify codegen` for GraphQL types
 3. Amplify Hosting injects `GATSBY_*` env vars at build time
 
 ## Consequences

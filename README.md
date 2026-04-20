@@ -26,10 +26,28 @@ All apps are Gatsby 5 / React 18 static sites sharing a common AWS Amplify Gen1 
 
 ## Development
 
+### First-time setup
+
+```bash
+# Install dependencies in each app
+(cd repos/portal && yarn install)
+(cd repos/designer && yarn install)
+(cd repos/modeler && yarn install)
+
+# Pull Amplify backend config (once, at umbrella root)
+amplify pull
+
+# Symlink amplify/ + aws-exports.js into each repo, generate .env.development, run codegen
+./scripts/sync-env.sh
+```
+
 ### Start all dev servers
 
 ```bash
-./scripts/dev-start-all.sh
+./scripts/dev-start-all.sh          # detached, returns the prompt
+tail -f /tmp/dhc-*.log              # follow logs
+./scripts/dev-stop-all.sh           # stop all servers
+./scripts/dev-start-all.sh --clean  # wipe caches before starting
 ```
 
 ### Check status across repos
@@ -44,9 +62,15 @@ All apps are Gatsby 5 / React 18 static sites sharing a common AWS Amplify Gen1 
 ./scripts/pull-all.sh
 ```
 
-### Per-app setup
+### Re-sync after backend changes
 
-Each app requires its own `node_modules`. See the `CLAUDE.md` in each sub-repo for app-specific setup instructions.
+After `amplify pull` or switching branches with backend changes:
+
+```bash
+./scripts/sync-env.sh
+```
+
+This re-symlinks `amplify/` and `aws-exports.js`, regenerates `.env.development`, and runs `amplify codegen` to update GraphQL types.
 
 ## Documentation
 
