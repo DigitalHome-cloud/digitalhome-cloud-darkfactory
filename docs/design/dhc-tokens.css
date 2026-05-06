@@ -1,0 +1,183 @@
+/**
+ * DigitalHome.Cloud Design Tokens
+ * Single source of truth for the DHC visual language across Portal, Designer, Modeler.
+ *
+ * This file is canonical in the umbrella repo. Each app symlinks it from
+ * `repos/<app>/src/styles/dhc-tokens.css → ../../../../docs/design/dhc-tokens.css`
+ * and imports it in `gatsby-browser.js` BEFORE `global.css` so that:
+ *   1. existing hex literals in global.css continue to work, and
+ *   2. new code can reference `var(--dhc-*)` everywhere.
+ *
+ * DLAB5 · dark-only theme · version 1.0.0
+ *
+ * Class prefix convention: .dhc-{component}-{variant}--{modifier}
+ */
+
+:root {
+  /* ─── SURFACES ─────────────────────────────────────────── */
+  --dhc-surface-primary:   #0f172a;           /* Main app background (slate-900) */
+  --dhc-surface-deep:      #020617;           /* Footer, inputs, graph canvas (slate-950) */
+  --dhc-surface-elevated:  #1e293b;           /* Cards, panels, header (slate-800) */
+  --dhc-surface-glass:     rgba(15, 23, 42, 0.9); /* Header glassmorphism */
+  --dhc-surface-card:      radial-gradient(circle at top left, #1e293b, #020617);
+  --dhc-surface-card-hover: radial-gradient(circle at top left, #1f2937, #020617);
+
+  /* ─── TEXT ──────────────────────────────────────────────── */
+  --dhc-text-primary:   #e5e7eb;  /* Body text, values (gray-200) · WCAG 12.4:1 */
+  --dhc-text-heading:   #e2e8f0;  /* Page and section titles (slate-200) · 12.0:1 */
+  --dhc-text-secondary: #9ca3af;  /* Descriptions, timestamps (gray-400) · 4.6:1 AA */
+  --dhc-text-slate:     #94a3b8;  /* Labels, inspector text (slate-400) · 4.3:1 AA */
+  --dhc-text-nav:       #cbd5f5;  /* Navigation links · 9.5:1 AAA */
+  --dhc-text-muted:     #64748b;  /* Placeholder, tertiary — large text only (slate-500) */
+
+  /* ─── BORDERS ───────────────────────────────────────────── */
+  --dhc-border-default: rgba(148, 163, 184, 0.3);  /* Cards, header (slate-400 @ 30%) */
+  --dhc-border-subtle:  rgba(148, 163, 184, 0.2);  /* Sidebar, secondary elements */
+  --dhc-border-hover:   rgba(148, 163, 184, 0.7);  /* Hover state */
+  --dhc-border-focus:   rgba(148, 163, 184, 0.4);  /* Input at rest */
+
+  --dhc-border-card:    1px solid rgba(148, 163, 184, 0.3);
+  --dhc-border-input:   1px solid rgba(148, 163, 184, 0.4);
+  --dhc-border-header:  1px solid rgba(148, 163, 184, 0.3);
+  --dhc-border-sidebar: 1px solid rgba(148, 163, 184, 0.2);
+
+  /* ─── ACCENT ────────────────────────────────────────────── */
+  --dhc-accent-cyan:      #0ea5e9;  /* Focus rings, selected states (sky-500) */
+  --dhc-accent-link:      #38bdf8;  /* Hyperlink text (sky-400) */
+  --dhc-accent-link-hover:#7dd3fc;  /* Hyperlink hover (sky-300) */
+  --dhc-accent-code:      #93c5fd;  /* Inline code text (blue-300) */
+
+  /* ─── ACTION (Green) ────────────────────────────────────── */
+  --dhc-action-primary:        #22c55e;                   /* Save, confirm, active (green-500) */
+  --dhc-action-primary-light:  #4ade80;                   /* Badges, pills (green-400) */
+  --dhc-action-primary-pale:   #bbf7d0;                   /* Button text (green-200) */
+  --dhc-action-primary-bg:     rgba(34, 197, 94, 0.15);   /* Green tinted background */
+  --dhc-action-primary-border: rgba(34, 197, 94, 0.6);    /* Green border */
+
+  /* ─── DANGER (Red) ──────────────────────────────────────── */
+  --dhc-danger-base:   #ef4444;                 /* Error/danger (red-500) */
+  --dhc-danger-light:  #fca5a5;                 /* Lighter error text (red-300) */
+  --dhc-danger-pale:   #fecaca;                 /* Palest error (red-200) */
+  --dhc-danger-bg:     rgba(239, 68, 68, 0.1);  /* Error background tint */
+  --dhc-danger-border: rgba(239, 68, 68, 0.5);  /* Error border */
+
+  /* ─── WARNING / INFO ────────────────────────────────────── */
+  --dhc-warning-base:  #f59e0b;  /* Warning (amber-500) */
+  --dhc-warning-light: #fde68a;  /* Light warning (amber-200) */
+  --dhc-info-base:     #3b82f6;  /* Informational (blue-500) */
+  --dhc-info-light:    #93c5fd;  /* Light info (blue-300) */
+
+  /* ─── GRADIENTS ─────────────────────────────────────────── */
+  --dhc-gradient-hero: linear-gradient(135deg, #22c55e, #0ea5e9);  /* Hero, logo mark, CTA */
+  --dhc-gradient-logo: linear-gradient(135deg, #22c55e, #0ea5e9);
+
+  /* ─── DESIGN VIEW COLORS (Ontology) ─────────────────────── */
+  --dhc-view-spatial:    #22c55e;  /* Rooms, zones */
+  --dhc-view-building:   #f59e0b;  /* Walls, doors, structure */
+  --dhc-view-electrical: #3b82f6;  /* Circuits, outlets */
+  --dhc-view-plumbing:   #06b6d4;  /* Pipes, fixtures */
+  --dhc-view-heating:    #ef4444;  /* HVAC, radiators */
+  --dhc-view-network:    #a855f7;  /* Ethernet, Wi-Fi */
+  --dhc-view-governance: #f97316;  /* Roles, ownership, governance */
+  --dhc-view-automation: #ec4899;  /* Scenes, rules */
+  --dhc-view-energy:     #eab308;  /* Solar, generation, storage, tariffs (yellow-500) */
+  --dhc-view-compliance: #a16207;  /* Norms, standards, certification (yellow-700) */
+  --dhc-view-shared:     #e5e7eb;  /* Cross-view / unassigned */
+
+  /* ─── CAPABILITY COLORS ─────────────────────────────────── */
+  --dhc-capability-actor:      #a855f7;  /* Actuator (purple-500) */
+  --dhc-capability-sensor:     #22c55e;  /* Sensor (green-500) */
+  --dhc-capability-controller: #3b82f6;  /* Controller (blue-500) */
+
+  /* ─── TYPOGRAPHY ────────────────────────────────────────── */
+  --dhc-font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --dhc-font-mono: "SF Mono", "Fira Code", SFMono-Regular, Menlo, Monaco, Consolas,
+                   "Liberation Mono", "Courier New", monospace;
+
+  --dhc-text-2xs:  0.65rem;
+  --dhc-text-xs:   0.7rem;
+  --dhc-text-sm:   0.75rem;
+  --dhc-text-base: 0.8rem;
+  --dhc-text-md:   0.85rem;
+  --dhc-text-lg:   0.9rem;
+  --dhc-text-xl:   1.0rem;
+  --dhc-text-2xl:  1.1rem;
+  --dhc-text-3xl:  1.5rem;
+  --dhc-text-4xl:  1.8rem;
+  --dhc-text-hero: 2.25rem;
+
+  --dhc-weight-normal:   400;
+  --dhc-weight-medium:   500;
+  --dhc-weight-semibold: 600;
+  --dhc-weight-bold:     700;
+
+  --dhc-leading-dense:  1.1;
+  --dhc-leading-tight:  1.4;
+  --dhc-leading-normal: 1.5;
+  --dhc-leading-loose:  1.75;
+
+  --dhc-tracking-tight:  0.03em;
+  --dhc-tracking-normal: 0.04em;
+  --dhc-tracking-wide:   0.05em;
+  --dhc-tracking-wider:  0.06em;
+
+  /* ─── SPACING ────────────────────────────────────────────── */
+  --dhc-space-1:  0.15rem;
+  --dhc-space-2:  0.25rem;
+  --dhc-space-3:  0.35rem;
+  --dhc-space-4:  0.5rem;
+  --dhc-space-5:  0.75rem;
+  --dhc-space-6:  1.0rem;
+  --dhc-space-7:  1.25rem;
+  --dhc-space-8:  1.5rem;
+  --dhc-space-9:  2.0rem;
+  --dhc-space-10: 3.0rem;
+
+  --dhc-container-max:   1280px;
+  --dhc-container-pad-x: 1.25rem;
+  --dhc-container-pad-t: 2rem;
+  --dhc-container-pad-b: 3rem;
+
+  --dhc-grid-workspace-gap: 0;
+  --dhc-grid-dashboard-gap: 1rem;
+  --dhc-grid-tile-gap:      1.25rem;
+  --dhc-grid-tile-min:      220px;
+  --dhc-grid-card-min:      280px;
+  --dhc-sidebar-width:      240px;
+  --dhc-inspector-width:    280px;
+  --dhc-viewer-panel-width: 300px;
+
+  --dhc-breakpoint-tablet: 1024px;
+
+  /* ─── BORDER RADII ───────────────────────────────────────── */
+  --dhc-radius-xs:   0.25rem;
+  --dhc-radius-sm:   0.35rem;
+  --dhc-radius-md:   0.45rem;
+  --dhc-radius-base: 0.5rem;
+  --dhc-radius-lg:   0.75rem;
+  --dhc-radius-xl:   1.0rem;
+  --dhc-radius-2xl:  1.25rem;
+  --dhc-radius-full: 999px;
+
+  /* ─── SHADOWS ────────────────────────────────────────────── */
+  --dhc-shadow-card:     0 18px 40px rgba(15, 23, 42, 0.7);
+  --dhc-shadow-dropdown: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --dhc-glow-view-dot:   0 0 6px currentColor;
+
+  --dhc-blur-header: blur(10px);
+
+  /* ─── MOTION ─────────────────────────────────────────────── */
+  --dhc-duration-fast:   0.12s;
+  --dhc-duration-normal: 0.15s;
+  --dhc-duration-slow:   0.25s;
+
+  --dhc-ease-default: ease;
+  --dhc-ease-out:     ease-out;
+
+  --dhc-transition-button:  background 0.15s ease, border-color 0.15s ease;
+  --dhc-transition-card:    transform 0.12s ease-out, box-shadow 0.12s ease-out,
+                             border-color 0.12s ease-out, background 0.12s ease-out;
+  --dhc-transition-input:   border-color 0.15s ease;
+  --dhc-transition-tab:     color 0.15s ease, border-color 0.15s ease;
+  --dhc-transition-chevron: transform 0.15s ease;
+}
