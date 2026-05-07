@@ -1,5 +1,9 @@
 # Related to the shared amplify Backend
 src/
+.graphqlconfig.yml
+
+# Local scratch space (deploy logs, screenshots, etc.) — never commit
+todo/
 
 # Dependencies
 node_modules/
