@@ -1,0 +1,31 @@
+# Append this block to the bottom of:
+#   repos/portal/amplify/backend/api/digitalhomecloudback/schema.graphql
+#
+# Adds two AppSync mutations that delegate authorization + S3 URL signing
+# to the dhcDesignStorageProxy Lambda. The Lambda checks that the caller
+# is in dhc-admins or in SmartHomeDesign.owners for the requested
+# smartHomeId, then returns a 5-min pre-signed S3 URL pointing at
+# tenant/{smartHomeId}/{fileName}.
+
+type DesignStorageUrl {
+  url: String!
+  expiresAt: AWSDateTime!
+  contentType: String
+}
+
+type Mutation {
+  requestDesignReadUrl(
+    smartHomeId: ID!
+    fileName: String!
+  ): DesignStorageUrl
+    @function(name: "dhcDesignStorageProxy-${env}")
+    @auth(rules: [{ allow: private }])
+
+  requestDesignWriteUrl(
+    smartHomeId: ID!
+    fileName: String!
+    contentType: String
+  ): DesignStorageUrl
+    @function(name: "dhcDesignStorageProxy-${env}")
+    @auth(rules: [{ allow: private }])
+}
