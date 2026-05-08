@@ -374,7 +374,8 @@ YYYY-MM-DD (quarterly cadence, or sooner if any High items open).
 
 ## Prior audits
 
-- (none yet — first audit will live at `docs/audits/YYYY-MM-DD-audit.md`)
+- 2026-05-08 — **0 critical** / 6 high / 7 medium / 2 low / 6 info — [docs/audits/2026-05-08-audit.md](../../../docs/audits/2026-05-08-audit.md). First audit on the Gen 2 backend. **All 5 prior-audit Criticals (C-1 to C-5) confirmed closed in Gen 2.** Remaining work is carry-over Highs (H-1 customHttp.yml, H-3 blog HTML XSS, H-4 SVG XSS, H-5 npm CVEs, H-6 Portal i18n, H-7 .graphqlconfig.yml) and 2 new Mediums (M-6 DDB PITR not enabled, M-7 stale Gen 1 refs in CLAUDE.md files).
+- 2026-05-07 — 5 critical / 8 high / 9 medium / 4 low / 5 info — [docs/audits/2026-05-07-audit.md](../../../docs/audits/2026-05-07-audit.md). Top items: SmartHomeDesign / SmartHome cross-tenant exposure (C-1), tenant data in publicly-accessible S3 paths (C-2), `globalAuthRule = public` footgun (C-3), no branch protection on `main` in any repo (C-4), UserProfile cross-user PII access (C-5).
 
 When a new audit completes, prepend a one-liner to this list with the date, severity counts, and a link:
 
