@@ -2,6 +2,7 @@
   "name": "digitalhome-cloud-darkfactory",
   "version": "2.0.0-gen2",
   "private": true,
+  "type": "module",
   "description": "DigitalHome.Cloud platform — umbrella repo. Hosts the AWS Amplify Gen 2 backend definition (TypeScript) shared by the Portal, Designer, and Modeler frontends.",
   "license": "Apache-2.0",
   "scripts": {
