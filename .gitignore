@@ -2,6 +2,11 @@
 src/
 .graphqlconfig.yml
 
+# Amplify Gen 2 — generated per-env outputs, never commit
+amplify_outputs.json
+amplify_outputs.d.ts
+.amplify/
+
 # Local scratch space (deploy logs, screenshots, etc.) — never commit
 todo/
 
