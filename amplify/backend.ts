@@ -1,4 +1,5 @@
 import { defineBackend } from "@aws-amplify/backend";
+import { Stack } from "aws-cdk-lib";
 import { Effect, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { auth } from "./auth/resource";
 import { data } from "./data/resource";
@@ -59,8 +60,30 @@ backend.dhcDesignStorageProxy.addEnvironment(
 );
 
 // ─── postConfirmation IAM (Cognito group management) ────────────────────────
-// The trigger needs to call cognito-idp:AdminAddUserToGroup on the same User
-// Pool. Gen 2 auto-grants this when the trigger is declared in defineAuth(),
-// so no explicit IAM here.
+// The trigger needs to call cognito-idp:AdminAddUserToGroup, GetGroup, and
+// CreateGroup. Gen 2's defineAuth({ triggers }) wires the Lambda invocation
+// principal but does NOT auto-grant Cognito admin IAM, so we add it here.
+//
+// Important: scope to a wildcard userpool ARN, NOT backend.auth.resources
+// .userPool.userPoolArn, to avoid a CFN circular dependency. The auth stack
+// already references the postConfirmation Lambda (as a trigger), so adding
+// a back-reference from the Lambda's role to the User Pool would close the
+// cycle. The trigger event carries `event.userPoolId` at runtime — the
+// Lambda uses that to address the actual pool — so a region+account-scoped
+// wildcard is sufficient and keeps the IAM tight to this AWS account.
+const proxyStack = Stack.of(backend.postConfirmation.resources.lambda);
+const userPoolWildcardArn = `arn:aws:cognito-idp:${proxyStack.region}:${proxyStack.account}:userpool/*`;
+
+backend.postConfirmation.resources.lambda.addToRolePolicy(
+  new PolicyStatement({
+    effect: Effect.ALLOW,
+    actions: [
+      "cognito-idp:AdminAddUserToGroup",
+      "cognito-idp:GetGroup",
+      "cognito-idp:CreateGroup",
+    ],
+    resources: [userPoolWildcardArn],
+  })
+);
 
 export default backend;
