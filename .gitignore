@@ -1,11 +1,11 @@
-# Related to the shared amplify Backend
-src/
-.graphqlconfig.yml
-
-# Amplify Gen 2 — generated per-env outputs, never commit
+# Amplify Gen 2 — local sandbox state, regenerated per developer
 amplify_outputs.json
 amplify_outputs.d.ts
 .amplify/
+
+# Each app's src/amplify_outputs.json IS committed (in the submodule repos)
+# — those hold public Cognito + AppSync IDs. Only the umbrella's root copy
+# is ignored, since `npx ampx sandbox` writes there per-developer.
 
 # Local scratch space (deploy logs, screenshots, etc.) — never commit
 todo/
@@ -20,8 +20,6 @@ public/
 # Environment & secrets
 .env*
 !.env.example
-src/aws-exports.js
-codecommit
 
 # OS
 .DS_Store
@@ -33,25 +31,3 @@ Thumbs.db
 .idea/
 .vscode/
 *.code-workspace
-
-#amplify-do-not-edit-begin
-amplify/\#current-cloud-backend
-amplify/.config/local-*
-amplify/logs
-amplify/mock-data
-amplify/mock-api-resources
-amplify/backend/amplify-meta.json
-amplify/backend/.temp
-build/
-dist/
-node_modules/
-aws-exports.js
-awsconfiguration.json
-amplifyconfiguration.json
-amplifyconfiguration.dart
-amplify-build-config.json
-amplify-gradle-config.json
-amplifytools.xcconfig
-.secret-*
-**.sample
-#amplify-do-not-edit-end
