@@ -3,6 +3,10 @@ amplify_outputs.json
 amplify_outputs.d.ts
 .amplify/
 
+# Gen 1 codegen leftover — `amplify codegen` writes this; we don't use it anymore.
+# Kept ignored in case any old branch / tooling regenerates it locally.
+.graphqlconfig.yml
+
 # Each app's src/amplify_outputs.json IS committed (in the submodule repos)
 # — those hold public Cognito + AppSync IDs. Only the umbrella's root copy
 # is ignored, since `npx ampx sandbox` writes there per-developer.

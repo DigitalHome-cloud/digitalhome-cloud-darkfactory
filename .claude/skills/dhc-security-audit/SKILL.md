@@ -125,8 +125,14 @@ Manual checks (AWS console / `amplify status`):
 # Insecure DOM operations
 grep -rn "dangerouslySetInnerHTML\|innerHTML\s*=\|eval(\|new Function(" repos/*/src/ 2>/dev/null | head
 
-# Unrestricted target=_blank without rel="noopener noreferrer"
-grep -rn 'target="_blank"' repos/*/src/ 2>/dev/null | grep -v "noopener\|noreferrer" | head
+# Unrestricted target=_blank without rel="noopener noreferrer".
+# Grep is line-based but JSX often spans `target` and `rel` across lines, so
+# look at a 2-line window after each match and exclude any window that has
+# `rel=...noreferrer` or `rel=...noopener`.
+grep -rn -A 1 'target="_blank"' repos/*/src/ 2>/dev/null | \
+  grep --no-group-separator -B 1 -E 'rel=' | \
+  grep -v 'rel=' | grep 'target="_blank"' | \
+  awk -F: '{print $1":"$2}' | sort -u || echo "  (no naked target=_blank — clean)"
 
 # document.write, window.open patterns
 grep -rn "document.write\|window.open(" repos/*/src/ 2>/dev/null | head

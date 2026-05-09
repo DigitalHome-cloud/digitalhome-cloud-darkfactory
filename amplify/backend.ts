@@ -59,6 +59,24 @@ backend.dhcDesignStorageProxy.addEnvironment(
   smartHomeDesignTable.tableName
 );
 
+// ─── DDB Point-in-Time Recovery (audit M-6) ────────────────────────────────
+// Gen 2's data tables are wrapped by the AmplifyDynamoDbTable construct (not
+// standard CfnTable), so the knob is exposed via cfnResources.amplifyDynamoDb
+// Tables[name].pointInTimeRecoveryEnabled. PITR is free up to 35 days of
+// recovery window and gives us a rollback path if a table is accidentally
+// truncated.
+const tablesNeedingPITR = [
+  "UserProfile",
+  "LibraryItem",
+  "SmartHome",
+  "SmartHomeDesign",
+] as const;
+for (const tableName of tablesNeedingPITR) {
+  backend.data.resources.cfnResources.amplifyDynamoDbTables[
+    tableName
+  ].pointInTimeRecoveryEnabled = true;
+}
+
 // ─── postConfirmation IAM (Cognito group management) ────────────────────────
 // The trigger needs to call cognito-idp:AdminAddUserToGroup, GetGroup, and
 // CreateGroup. Gen 2's defineAuth({ triggers }) wires the Lambda invocation
