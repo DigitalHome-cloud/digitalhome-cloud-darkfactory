@@ -12,6 +12,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working across 
 digitalhome-cloud-darkfactory/
   CLAUDE.md              ← You are here
   README.md
+  amplify/               ← Amplify Gen 2 backend (TypeScript) — owns the platform's auth/data/storage/functions
+  package.json           ← @aws-amplify/backend, aws-cdk-lib, typescript
+  tsconfig.json
   repos/
     core/                ← digitalhome-cloud-core (submodule) — ontology, modules, build tooling
     portal/              ← digitalhome-cloud-portal (submodule)
@@ -21,6 +24,7 @@ digitalhome-cloud-darkfactory/
     architecture/        ← Platform architecture docs
     specs/               ← Feature specifications
     adr/                 ← Architecture Decision Records
+    audits/              ← Security/quality audit reports
   scripts/               ← Cross-repo helper scripts
   archive/               ← Historical files
 ```
@@ -50,7 +54,9 @@ All three apps are **Gatsby 5 / React 18** static sites deployed via **AWS Ampli
 
 ### Backend Ownership
 
-The **umbrella repo owns the single Amplify Gen1 backend** (`amplify/`). Per-repo `amplify/` folders and `src/aws-exports.js` files are **symlinks** created by `scripts/sync-env.sh`. Designer and modeler are frontend-only consumers — they use the same `GATSBY_*` env vars and `aws-exports.deployment.js` pattern to connect to the shared backend.
+The **umbrella repo owns the single Amplify Gen 2 backend** under `amplify/`. It's defined in TypeScript (`backend.ts`, `auth/resource.ts`, `data/resource.ts`, `storage/resource.ts`, `functions/*/`). Submodules are frontend-only consumers — each app commits a `src/amplify_outputs.json` produced by `npx ampx sandbox` (or by the deployed pipeline) that holds the public Cognito + AppSync + S3 IDs.
+
+For backend authoring, sandbox workflow, and CDK escape-hatch patterns, see the `dhc-amplify-gen2` skill (`.claude/skills/dhc-amplify-gen2/SKILL.md`).
 
 ### Authentication
 
@@ -58,10 +64,12 @@ The **umbrella repo owns the single Amplify Gen1 backend** (`amplify/`). Per-rep
 - `authState`: `"loading"` | `"demo"` | `"authenticated"`
 - `user`, `groups`, `hasGroup(name)`, `signOut()`, `reloadSession()`
 
-Cognito groups control feature access:
-- `dhc-users` — SmartHome Designer access
-- `dhc-operators` — SmartHome Operator access (future)
-- `dhc-admins` — Modeler editing access (future)
+Cognito groups control feature access (defined in `amplify/auth/resource.ts`):
+- `dhc-admins` — full admin: Modeler editing, ontology library writes
+- `dhc-modelers` — Modeler editing access
+- `dhc-professional` — paid Designer tier
+- `dhc-standard` — standard Designer tier
+- `dhc-welcome` — auto-assigned to new sign-ups (via `postConfirmation` Lambda trigger)
 
 ### SmartHome ID
 
@@ -71,7 +79,7 @@ Three demo SmartHomes are always available: `DE-DEMO`, `FR-DEMO`, `BE-DEMO`. Cro
 
 ### Ontology (Semantic Core)
 
-The DHC core ontology (`dhc-core.schema.ttl`) lives in `repos/core/src/ontology/`. It defines the domain vocabulary (classes like `RealEstate`, `Area`, `Space`, `Circuit`, `Sensor`) used by all apps. Build scripts in `repos/core/scripts/` parse the TTL and generate Blockly block definitions and ontology graph JSON into `repos/core/build/`. The ontology follows semantic versioning (`model-vX.Y.Z`).
+The DHC core ontology lives in `repos/core/schema/` (`tbox/dhc-core.ttl` + module TTLs under `modules/`, with `draft/` for in-progress edits). It defines the domain vocabulary (classes like `RealEstate`, `Area`, `Space`, `Circuit`, `Sensor`) used by all apps. Build scripts in `repos/core/scripts/` parse the TTL and generate Blockly block definitions and ontology graph JSON. The ontology follows semantic versioning (`model-vX.Y.Z`).
 
 ## Key Rules
 
@@ -98,46 +106,49 @@ All repos use the same branching model:
 
 ### Environment Variables
 
-All apps use `GATSBY_*` env vars configured identically:
-- Locally: `.env.development` (gitignored, generated from `aws-exports.js`)
-- Deployed: set in Amplify Console
+Backend connection details (Cognito User Pool, AppSync endpoint, S3 bucket, etc.) are NOT carried in env vars anymore — each app commits `src/amplify_outputs.json` and imports it directly in `gatsby-browser.js` / `gatsby-ssr.js`. Updating outputs after a backend change is a file copy from the umbrella's sandbox output (see the `dhc-amplify-gen2` skill).
 
-Cross-app URLs use env vars with sensible defaults:
+`.env.development` (gitignored) is reserved for **cross-app URLs only**:
 - `GATSBY_PORTAL_URL` → `https://portal.digitalhome.cloud`
 - `GATSBY_DESIGNER_URL` → `https://designer.digitalhome.cloud`
 - `GATSBY_MODELER_URL` → `https://modeler.digitalhome.cloud`
 
+Locally these get overridden to `http://localhost:8000/8001/8002`.
+
 ### Files That Must Never Be Committed (any repo)
 
-- `src/aws-exports.js` — Amplify-generated config with hardcoded values
-- `.env.development` — local env vars with actual secrets
+- `.env.development` — local URL overrides
+- `amplify_outputs.json` at the umbrella root — written per developer by `npx ampx sandbox`
+- `.amplify/` — sandbox state cache
+- `node_modules/`, `.cache/`, `public/`
 
 ### Local Dev Setup
 
-The umbrella repo owns the single Amplify backend and `src/aws-exports.js`. Per-repo `amplify/` folders and `src/aws-exports.js` files are **symlinks** pointing to the umbrella master — no copies.
-
-**First-time / after `amplify pull`:**
-
 ```bash
-amplify pull                    # run once at umbrella root
-./scripts/sync-env.sh           # symlinks amplify/ + aws-exports.js into each repo,
-                                # generates .env.development, runs amplify codegen
+cd ~/digitalhomeCloud/digitalhome-cloud-darkfactory
+npm install                     # umbrella deps (Amplify Gen 2 toolchain)
+npx ampx sandbox                # boot personal sandbox stack (one per developer)
+                                # writes amplify_outputs.json to umbrella root
+
+# Propagate outputs to each app on first deploy or after a backend change:
+cp amplify_outputs.json repos/portal/src/
+cp amplify_outputs.json repos/designer/src/
+cp amplify_outputs.json repos/modeler/src/
+
+# Then in each app:
+cd repos/portal && yarn develop          # 8000
+cd repos/designer && yarn develop        # 8001
+cd repos/modeler && yarn develop         # 8002
+
+# Or all at once from the umbrella:
+./scripts/dev-start-all.sh
+./scripts/dev-stop-all.sh
 ```
-
-**Daily:**
-
-```bash
-./scripts/dev-start-all.sh      # preflight checks, kills stale ports, starts all 3 servers detached
-./scripts/dev-stop-all.sh       # stops all 3 servers
-```
-
-Pass `--clean` to `dev-start-all.sh` to wipe `.cache/`, `public/`, and `node_modules/.cache` before starting.
 
 ## Scripts
 
 | Script | Purpose |
 |--------|---------|
-| `scripts/sync-env.sh` | Symlink `amplify/` + `aws-exports.js` from umbrella into each repo, generate `.env.development`, run `amplify codegen` |
 | `scripts/dev-start-all.sh` | Preflight checks + start all 3 Gatsby dev servers detached (ports 8000, 8001, 8002). Logs in `/tmp/dhc-*.log` |
 | `scripts/dev-stop-all.sh` | Stop all 3 dev servers started by `dev-start-all.sh` |
 | `scripts/status.sh` | Git status and recent log across all repos |
@@ -172,7 +183,7 @@ git checkout stage
 - `docs/adr/` — Architecture Decision Records:
   - 0001: Multi-repo with shared backend
   - 0002: Gatsby 5 + React 18 frontend stack
-  - 0003: Amplify Gen1 backend with Gen2 frontend imports
+  - 0003: Amplify Gen 2 backend (TypeScript-defined; supersedes prior Gen 1 ADR)
   - 0004: Environment-variable-driven configuration
   - 0005: Cognito auth with group-based access control
   - 0006: SmartHome ID as tenant partition key
@@ -190,4 +201,4 @@ Each app deploys independently via Amplify Hosting:
 - Push to `main` → production deploy
 - Push to `stage` → staging deploy
 
-The portal's Amplify backend changes (Cognito, AppSync, etc.) affect all apps since they share the backend.
+Amplify Hosting's CI runs `npx ampx pipeline-deploy` for the umbrella's `amplify/` backend on each push, then builds the app's frontend. Backend changes affect all three apps since they share the same Cognito User Pool, AppSync API, S3 bucket, and DDB tables.
