@@ -6,11 +6,13 @@ import { postConfirmation } from "../functions/postConfirmation/resource";
  * matching the platform's tier system.
  *
  * Group meanings:
- *   - dhc-admins:      Library + ontology admins, full SmartHome read access
- *   - dhc-modelers:    can edit ontology drafts in the Modeler
- *   - dhc-professional: paid tier, future feature gating
- *   - dhc-standard:    default paid tier, future feature gating
- *   - dhc-welcome:     auto-assigned on sign-up (postConfirmation Lambda)
+ *   - dhc-admins:           Library + ontology admins, full SmartHome read access
+ *   - dhc-modelers:         can edit ontology drafts in the Modeler
+ *   - dhc-devops-engineers: internal — gates the "isDemo" flag in DigitalHome
+ *                           creation and other devops-only switches
+ *   - dhc-professional:     paid tier, future feature gating
+ *   - dhc-standard:         default paid tier, future feature gating
+ *   - dhc-welcome:          auto-assigned on sign-up (postConfirmation Lambda)
  *
  * Google federation is intentionally NOT configured in this initial sandbox
  * cutover. To re-enable later:
@@ -29,6 +31,7 @@ export const auth = defineAuth({
   groups: [
     "dhc-admins",
     "dhc-modelers",
+    "dhc-devops-engineers",
     "dhc-professional",
     "dhc-standard",
     "dhc-welcome",

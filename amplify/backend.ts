@@ -6,6 +6,7 @@ import { data } from "./data/resource";
 import { storage } from "./storage/resource";
 import { dhcDesignStorageProxy } from "./functions/dhcDesignStorageProxy/resource";
 import { postConfirmation } from "./functions/postConfirmation/resource";
+import { createDigitalHome } from "./functions/createDigitalHome/resource";
 
 const backend = defineBackend({
   auth,
@@ -13,6 +14,7 @@ const backend = defineBackend({
   storage,
   dhcDesignStorageProxy,
   postConfirmation,
+  createDigitalHome,
 });
 
 // ─── dhcDesignStorageProxy IAM + env wiring (DH-SPEC-203, audit C-2 v2) ─────
@@ -25,6 +27,7 @@ const backend = defineBackend({
 const proxyLambda = backend.dhcDesignStorageProxy.resources.lambda;
 const bucket = backend.storage.resources.bucket;
 const smartHomeDesignTable = backend.data.resources.tables.SmartHomeDesign;
+const digitalHomeTable = backend.data.resources.tables.DigitalHome;
 
 proxyLambda.addToRolePolicy(
   new PolicyStatement({
@@ -46,6 +49,7 @@ proxyLambda.addToRolePolicy(
     resources: [
       smartHomeDesignTable.tableArn,
       `${smartHomeDesignTable.tableArn}/index/*`,
+      digitalHomeTable.tableArn,
     ],
   })
 );
@@ -58,6 +62,10 @@ backend.dhcDesignStorageProxy.addEnvironment(
   "SMARTHOMEDESIGN_TABLE_NAME",
   smartHomeDesignTable.tableName
 );
+backend.dhcDesignStorageProxy.addEnvironment(
+  "DIGITALHOME_TABLE_NAME",
+  digitalHomeTable.tableName
+);
 
 // ─── DDB Point-in-Time Recovery (audit M-6) ────────────────────────────────
 // Gen 2's data tables are wrapped by the AmplifyDynamoDbTable construct (not
@@ -68,7 +76,7 @@ backend.dhcDesignStorageProxy.addEnvironment(
 const tablesNeedingPITR = [
   "UserProfile",
   "LibraryItem",
-  "SmartHome",
+  "DigitalHome",
   "SmartHomeDesign",
 ] as const;
 for (const tableName of tablesNeedingPITR) {
@@ -102,6 +110,65 @@ backend.postConfirmation.resources.lambda.addToRolePolicy(
     ],
     resources: [userPoolWildcardArn],
   })
+);
+
+// ─── createDigitalHome IAM + env wiring (Step 1 / abox.md) ─────────────────
+// The Lambda performs:
+//   - S3 PutObject under Private/DigitalHomes/* and Public/DigitalHomes/*
+//     for abox.ttl, graph.jsonld, and folder placeholders.
+//   - DDB GetItem/PutItem on the DigitalHome table (uniqueness + persist).
+//   - Cognito CreateGroup + AdminAddUserToGroup (per-home group named after
+//     the smartHomeId).
+//
+// Same wildcard-userpool pattern as postConfirmation — createDigitalHome is
+// not a Cognito trigger, so we *could* reference backend.auth.resources
+// .userPool.userPoolArn directly, but the wildcard is symmetrical with the
+// existing pattern and keeps the IAM language consistent. We do, however,
+// pass the User Pool ID to the Lambda via env var (no circular dep — the
+// dependency only flows Lambda → UserPool, not back).
+const createDhLambda = backend.createDigitalHome.resources.lambda;
+
+createDhLambda.addToRolePolicy(
+  new PolicyStatement({
+    effect: Effect.ALLOW,
+    actions: ["s3:PutObject"],
+    resources: [
+      `${bucket.bucketArn}/Private/DigitalHomes/*`,
+      `${bucket.bucketArn}/Public/DigitalHomes/*`,
+    ],
+  })
+);
+
+createDhLambda.addToRolePolicy(
+  new PolicyStatement({
+    effect: Effect.ALLOW,
+    actions: ["dynamodb:GetItem", "dynamodb:PutItem"],
+    resources: [digitalHomeTable.tableArn],
+  })
+);
+
+createDhLambda.addToRolePolicy(
+  new PolicyStatement({
+    effect: Effect.ALLOW,
+    actions: [
+      "cognito-idp:CreateGroup",
+      "cognito-idp:AdminAddUserToGroup",
+    ],
+    resources: [userPoolWildcardArn],
+  })
+);
+
+backend.createDigitalHome.addEnvironment(
+  "STORAGE_BUCKET_NAME",
+  bucket.bucketName
+);
+backend.createDigitalHome.addEnvironment(
+  "DIGITALHOME_TABLE_NAME",
+  digitalHomeTable.tableName
+);
+backend.createDigitalHome.addEnvironment(
+  "USER_POOL_ID",
+  backend.auth.resources.userPool.userPoolId
 );
 
 export default backend;
