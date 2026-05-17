@@ -2,7 +2,12 @@
 
 ## Status
 
-Accepted
+Accepted. **Partially superseded (2026-05-15):** the *multi-repo with one
+shared backend* decision still holds, but the backend is now Amplify **Gen 2**
+(see ADR 0003) and lives in the **`repos/core` submodule**, not the umbrella
+root — there is no `amplify/`/`aws-exports.js`/`sync-env.sh` symlink flow
+anymore (see ADR 0008 and `docs/architecture/amplify-backend.md`). Read the
+backend-mechanics paragraphs below as historical.
 
 ## Date
 

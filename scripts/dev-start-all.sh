@@ -53,30 +53,29 @@ preflight_app() {
     return 1
   fi
 
-  # 1. aws-exports.js — must exist (symlink from umbrella master or file)
-  if [ ! -f "$app_dir/src/aws-exports.js" ]; then
-    echo "ERROR: ${name}: src/aws-exports.js missing — run '$SCRIPT_DIR/sync-env.sh' first" >&2
-    return 1
-  fi
-
-  # 2. .env.development — generate from aws-exports if missing
-  if [ ! -f "$app_dir/.env.development" ]; then
-    if [ -f "$app_dir/scripts/generate-aws-config-from-master.js" ]; then
-      echo "  ${name}: .env.development missing, generating…"
-      (cd "$app_dir" && node scripts/generate-aws-config-from-master.js)
+  # 1. amplify_outputs.json — Gen 2 deploy-stack public IDs (Cognito/AppSync/S3).
+  # The Gen 2 backend lives in repos/core; `npx ampx sandbox` run from there
+  # writes repos/core/amplify_outputs.json. If the app's copy is missing, seed
+  # it from core's sandbox output. If neither exists, run sandbox first.
+  local core_outputs="$ROOT_DIR/repos/core/amplify_outputs.json"
+  if [ ! -f "$app_dir/src/amplify_outputs.json" ]; then
+    if [ -f "$core_outputs" ]; then
+      echo "  ${name}: src/amplify_outputs.json missing, copying from repos/core sandbox output"
+      cp "$core_outputs" "$app_dir/src/amplify_outputs.json"
     else
-      echo "ERROR: ${name}: .env.development missing and no generator script" >&2
+      echo "ERROR: ${name}: src/amplify_outputs.json missing and no repos/core sandbox output found." >&2
+      echo "       Run 'npx ampx sandbox' from $ROOT_DIR/repos/core first, or 'git pull' if outputs should be committed." >&2
       return 1
     fi
   fi
 
-  # 3. node_modules present
+  # 2. node_modules present
   if [ ! -d "$app_dir/node_modules" ]; then
     echo "ERROR: ${name}: node_modules missing — run 'yarn install' in $app_dir" >&2
     return 1
   fi
 
-  # 4. Optional cache wipe
+  # 3. Optional cache wipe
   if [ "$CLEAN" = "1" ]; then
     echo "  ${name}: clearing .cache, public, node_modules/.cache"
     rm -rf "$app_dir/.cache" "$app_dir/public" "$app_dir/node_modules/.cache"

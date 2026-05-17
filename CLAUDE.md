@@ -12,11 +12,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working across 
 digitalhome-cloud-darkfactory/
   CLAUDE.md              ← You are here
   README.md
-  amplify/               ← Amplify Gen 2 backend (TypeScript) — owns the platform's auth/data/storage/functions
-  package.json           ← @aws-amplify/backend, aws-cdk-lib, typescript
-  tsconfig.json
   repos/
-    core/                ← digitalhome-cloud-core (submodule) — ontology, modules, build tooling
+    core/                ← digitalhome-cloud-core (submodule) — ontology schema + the platform's Amplify Gen 2 backend (amplify/)
     portal/              ← digitalhome-cloud-portal (submodule)
     designer/            ← digitalhome-cloud-designer (submodule)
     modeler/             ← digitalhome-cloud-modeler (submodule)
@@ -28,6 +25,10 @@ digitalhome-cloud-darkfactory/
   scripts/               ← Cross-repo helper scripts
   archive/               ← Historical files
 ```
+
+> The umbrella root has **no** `amplify/`, `package.json`, or `tsconfig.json` —
+> the Amplify Gen 2 backend and its toolchain live in `repos/core` (moved there
+> to avoid two `amplify/` levels). See **Backend Ownership** below.
 
 ## Sub-Repos
 
@@ -54,7 +55,9 @@ All three apps are **Gatsby 5 / React 18** static sites deployed via **AWS Ampli
 
 ### Backend Ownership
 
-The **umbrella repo owns the single Amplify Gen 2 backend** under `amplify/`. It's defined in TypeScript (`backend.ts`, `auth/resource.ts`, `data/resource.ts`, `storage/resource.ts`, `functions/*/`). Submodules are frontend-only consumers — each app commits a `src/amplify_outputs.json` produced by `npx ampx sandbox` (or by the deployed pipeline) that holds the public Cognito + AppSync + S3 IDs.
+The **`repos/core` submodule owns the single Amplify Gen 2 backend** under `repos/core/amplify/` — defined in TypeScript (`backend.ts`, `auth/resource.ts`, `data/resource.ts`, `storage/resource.ts`, `functions/*/`). It was moved out of the umbrella root because having an `amplify/` at the umbrella *and* a submodule that Amplify Hosting builds caused "amplify on two levels of a repo" conflicts. `repos/core/package.json` is dual-purpose (ontology vitest harness + Amplify toolchain). Portal, Designer, and Modeler are frontend-only consumers — each commits a `src/amplify_outputs.json` produced by `npx ampx sandbox` (or by the deployed pipeline) that holds the public Cognito + AppSync + S3 IDs.
+
+**Stage status:** the stage backend (`repos/core` branch `stage`) is live and the **stage Designer is wired to it and operational**. Portal and Modeler still point at the previous Cognito pool — re-pointing them is pending.
 
 For backend authoring, sandbox workflow, and CDK escape-hatch patterns, see the `dhc-amplify-gen2` skill (`.claude/skills/dhc-amplify-gen2/SKILL.md`).
 
@@ -64,7 +67,7 @@ For backend authoring, sandbox workflow, and CDK escape-hatch patterns, see the 
 - `authState`: `"loading"` | `"demo"` | `"authenticated"`
 - `user`, `groups`, `hasGroup(name)`, `signOut()`, `reloadSession()`
 
-Cognito groups control feature access (defined in `amplify/auth/resource.ts`):
+Cognito groups control feature access (defined in `repos/core/amplify/auth/resource.ts`):
 - `dhc-admins` — full admin: Modeler editing, ontology library writes
 - `dhc-modelers` — Modeler editing access
 - `dhc-professional` — paid Designer tier
@@ -106,7 +109,7 @@ All repos use the same branching model:
 
 ### Environment Variables
 
-Backend connection details (Cognito User Pool, AppSync endpoint, S3 bucket, etc.) are NOT carried in env vars anymore — each app commits `src/amplify_outputs.json` and imports it directly in `gatsby-browser.js` / `gatsby-ssr.js`. Updating outputs after a backend change is a file copy from the umbrella's sandbox output (see the `dhc-amplify-gen2` skill).
+Backend connection details (Cognito User Pool, AppSync endpoint, S3 bucket, etc.) are NOT carried in env vars anymore — each app commits `src/amplify_outputs.json` and imports it directly in `gatsby-browser.js` / `gatsby-ssr.js`. Updating outputs after a backend change is a file copy from `repos/core`'s sandbox output (see the `dhc-amplify-gen2` skill).
 
 `.env.development` (gitignored) is reserved for **cross-app URLs only**:
 - `GATSBY_PORTAL_URL` → `https://portal.digitalhome.cloud`
@@ -118,29 +121,31 @@ Locally these get overridden to `http://localhost:8000/8001/8002`.
 ### Files That Must Never Be Committed (any repo)
 
 - `.env.development` — local URL overrides
-- `amplify_outputs.json` at the umbrella root — written per developer by `npx ampx sandbox`
+- `repos/core/amplify_outputs.json` — written per developer by `npx ampx sandbox`
+- `repos/core/.amplify/` — sandbox state cache
 - `.amplify/` — sandbox state cache
 - `node_modules/`, `.cache/`, `public/`
 
 ### Local Dev Setup
 
 ```bash
-cd ~/digitalhomeCloud/digitalhome-cloud-darkfactory
-npm install                     # umbrella deps (Amplify Gen 2 toolchain)
+cd ~/digitalhomeCloud/digitalhome-cloud-darkfactory/repos/core
+npm install                     # core deps: vitest harness + Amplify Gen 2 toolchain
 npx ampx sandbox                # boot personal sandbox stack (one per developer)
-                                # writes amplify_outputs.json to umbrella root
+                                # writes repos/core/amplify_outputs.json
 
-# Propagate outputs to each app on first deploy or after a backend change:
-cp amplify_outputs.json repos/portal/src/
-cp amplify_outputs.json repos/designer/src/
-cp amplify_outputs.json repos/modeler/src/
+# Propagate outputs to each app on first deploy or after a backend change
+# (run from repos/core):
+cp amplify_outputs.json ../portal/src/
+cp amplify_outputs.json ../designer/src/
+cp amplify_outputs.json ../modeler/src/
 
 # Then in each app:
-cd repos/portal && yarn develop          # 8000
-cd repos/designer && yarn develop        # 8001
-cd repos/modeler && yarn develop         # 8002
+cd ../portal && yarn develop             # 8000
+cd ../designer && yarn develop           # 8001
+cd ../modeler && yarn develop            # 8002
 
-# Or all at once from the umbrella:
+# Or all at once from the umbrella (seeds outputs from repos/core automatically):
 ./scripts/dev-start-all.sh
 ./scripts/dev-stop-all.sh
 ```
@@ -183,12 +188,12 @@ git checkout stage
 - `docs/adr/` — Architecture Decision Records:
   - 0001: Multi-repo with shared backend
   - 0002: Gatsby 5 + React 18 frontend stack
-  - 0003: Amplify Gen 2 backend (TypeScript-defined; supersedes prior Gen 1 ADR)
+  - 0003: Amplify Gen 2 backend (TypeScript-defined, lives in `repos/core`; supersedes prior Gen 1 ADR)
   - 0004: Environment-variable-driven configuration
   - 0005: Cognito auth with group-based access control
   - 0006: SmartHome ID as tenant partition key
   - 0007: Semantic core ontology in core repo (migrated from modeler)
-  - 0008: Umbrella repo with git submodules
+  - 0008: Umbrella repo with git submodules (backend relocated into `repos/core`)
   - 0009: Single spec document per target release
   - 0010: S3 bucket structure for global and tenant content
   - 0011: All GraphQL types in portal backend schema
@@ -201,4 +206,4 @@ Each app deploys independently via Amplify Hosting:
 - Push to `main` → production deploy
 - Push to `stage` → staging deploy
 
-Amplify Hosting's CI runs `npx ampx pipeline-deploy` for the umbrella's `amplify/` backend on each push, then builds the app's frontend. Backend changes affect all three apps since they share the same Cognito User Pool, AppSync API, S3 bucket, and DDB tables.
+The backend deploys from its own Amplify Hosting app: `repos/core/amplify.yml` runs `npm install` + `npx ampx pipeline-deploy --branch $AWS_BRANCH` on push to `repos/core` (a backend-only app — its `frontend` phase only emits a stub `index.html`). Each frontend app's own `amplify.yml` pulls the deployed config via `npx ampx generate outputs --branch $AMPLIFY_BACKEND_APP_BRANCH --app-id $AMPLIFY_BACKEND_APP_ID --out-dir ./src` in `preBuild`, then builds. Backend changes affect every app that points at the same stack since they share the Cognito User Pool, AppSync API, S3 bucket, and DDB tables — currently the stage Designer (Portal/Modeler re-point pending).

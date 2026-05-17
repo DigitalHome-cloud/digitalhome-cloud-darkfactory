@@ -1,12 +1,30 @@
-# ADR 0003: Amplify Gen1 Backend with Gen2 (v6) Frontend Imports
+# ADR 0003: Amplify Backend Generation (Gen 1 → Gen 2)
 
 ## Status
 
-Accepted
+**Superseded by the Update below (2026-05-15).** The platform now runs a pure
+Amplify **Gen 2** backend (TypeScript / CDK) defined in the `repos/core`
+submodule. The Gen 1 + `aws-exports.deployment.js` hybrid recorded further down
+is **historical** and must not be followed.
+
+## Update (2026-05-15): Gen 2 backend, located in `repos/core`
+
+- The backend is now **Amplify Gen 2** — a TypeScript `amplify/` defined with
+  `@aws-amplify/backend` + CDK, deployed via `npx ampx pipeline-deploy`.
+  Frontends consume a committed `src/amplify_outputs.json` (public IDs only).
+  The `aws-exports.js` / `aws-exports.deployment.js` /
+  `generate-aws-config-from-master.js` / `sync-env.sh` bridge is **gone**.
+- The backend definition lives in the **`repos/core` submodule**
+  (`repos/core/amplify/`), not the umbrella root — moved there to avoid two
+  `amplify/` levels in one checkout (see ADR 0008 and
+  `docs/architecture/amplify-backend.md`).
+- The frontend was already Amplify JS v6 (the original decision below) and did
+  **not** change — the migration path predicted in "Consequences → Positive"
+  held.
 
 ## Date
 
-2024-11 (documented retroactively 2025-02)
+2024-11 (documented retroactively 2025-02); updated 2026-05-15
 
 ## Context
 

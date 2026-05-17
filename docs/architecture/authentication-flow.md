@@ -1,8 +1,9 @@
 # DigitalHome.Cloud – Authentication Mechanism
 
 This document explains how authentication works in the DigitalHome.Cloud
-portal with Amplify Gen1 backend + Gen2 frontend, and how the different
-pieces (Cognito, Amplify, AuthContext, pages) fit together.
+portal with the Amplify Gen 2 backend (defined in `repos/core`) and Amplify
+JS v6 frontend, and how the different pieces (Cognito, Amplify, AuthContext,
+pages) fit together.
 
 ---
 

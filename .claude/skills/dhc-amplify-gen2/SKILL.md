@@ -5,7 +5,14 @@ description: Use when authoring or editing the AWS Amplify Gen 2 backend (auth, 
 
 # DHC Amplify Gen 2 — backend authoring & deployment
 
-The DHC platform runs on **AWS Amplify Gen 2**. The backend is defined as TypeScript at the **umbrella repo root** (`digitalhome-cloud-darkfactory/amplify/`). Submodules (`portal`, `designer`, `modeler`) are frontend-only consumers — they read `src/amplify_outputs.json` to talk to the deployed backend.
+The DHC platform runs on **AWS Amplify Gen 2**. The backend is defined as
+TypeScript **inside the `repos/core` submodule** (`repos/core/amplify/`). It was
+moved there from the umbrella root because having an `amplify/` directory at the
+umbrella *and* a submodule that Amplify Hosting builds caused "amplify on two
+levels of a repo" conflicts — there is now exactly one `amplify/` level, owned
+by `core`. Submodules (`portal`, `designer`, `modeler`) are frontend-only
+consumers — they read `src/amplify_outputs.json` to talk to the deployed
+backend.
 
 This skill covers:
 1. Repo layout — where each category lives
@@ -20,41 +27,62 @@ This skill covers:
 ## 1. Repo layout
 
 ```
-digitalhome-cloud-darkfactory/                    ← umbrella, owns the backend
+repos/core/                                         ← owns the backend
   amplify/
-    backend.ts                                    ← top-level defineBackend({...}) + CDK overrides
-    auth/resource.ts                              ← defineAuth: email + 5 groups + postConfirmation trigger
-    data/resource.ts                              ← defineData: 4 models + 2 custom mutations
-    storage/resource.ts                           ← defineStorage: public/protected/private prefixes (tenant/* deliberately omitted)
+    backend.ts                                      ← top-level defineBackend({...}) + CDK overrides
+    auth/resource.ts                                ← defineAuth: email + groups + postConfirmation trigger
+    data/resource.ts                                ← defineData: models + custom mutations
+    storage/resource.ts                             ← defineStorage: public/protected/private prefixes (tenant/* deliberately omitted)
     functions/
-      dhcDesignStorageProxy/                      ← signed-URL Lambda for tenant data (DH-SPEC-203)
-        resource.ts
-        handler.ts
-      postConfirmation/                           ← Cognito trigger: add new users to dhc-welcome
-        resource.ts
-        handler.ts
-  package.json                                    ← @aws-amplify/backend, aws-cdk-lib, typescript
-  tsconfig.json                                   ← target es2022, module es2022, moduleResolution bundler
-  amplify_outputs.json                            ← gitignored (per-developer sandbox output)
-  amplify_outputs.d.ts                            ← gitignored
-  .amplify/                                       ← gitignored (sandbox state cache)
+      createDigitalHome/                            ← initiate-flow Lambda (A-Box bootstrap)
+      dhcDesignStorageProxy/                        ← signed-URL Lambda for tenant data (DH-SPEC-203)
+      postConfirmation/                             ← Cognito trigger: add new users to dhc-welcome
+  amplify.yml                                       ← Amplify Hosting CI: npm install + ampx pipeline-deploy
+  package.json                                      ← @dhc/digitalhome-cloud-core: vitest harness + Amplify toolchain
+  tsconfig.json                                     ← target es2022, module es2022, moduleResolution bundler
+  amplify_outputs.json                              ← gitignored (per-developer sandbox output)
+  amplify_outputs.d.ts                              ← gitignored
+  .amplify/                                         ← gitignored (sandbox state cache)
 
-repos/portal/    src/amplify_outputs.json         ← committed (deployed-stack public IDs)
-repos/designer/  src/amplify_outputs.json         ← committed
-repos/modeler/   src/amplify_outputs.json         ← committed
+repos/portal/    src/amplify_outputs.json           ← committed (deployed-stack public IDs)
+repos/designer/  src/amplify_outputs.json           ← committed
+repos/modeler/   src/amplify_outputs.json           ← committed
 ```
 
 **Hard rules:**
-- The Gen 2 backend lives at the **umbrella root**, not inside any submodule. Don't create `repos/portal/amplify/` or similar — that was the Gen 1 layout and is gone.
-- Each app's `src/amplify_outputs.json` IS committed. It contains public Cognito User Pool IDs, AppSync endpoints, and the S3 bucket name — needed at build time.
-- The umbrella's root `amplify_outputs.json` is **gitignored** because `npx ampx sandbox` writes it per-developer. Copy from there into each app's `src/amplify_outputs.json` after sandbox redeploy.
+- The Gen 2 backend lives in the **`repos/core` submodule**, not at the
+  umbrella root and not inside any frontend submodule. The umbrella root has
+  **no** `amplify/`, `package.json`, or `tsconfig.json` — those were removed
+  when the backend moved into `core` (that was the "two `amplify/` levels"
+  conflict). Don't recreate `repos/portal/amplify/` (Gen 1 layout, gone) or a
+  second umbrella-root `amplify/`.
+- `repos/core/package.json` serves **two roles**: the ontology vitest test
+  harness *and* the Amplify backend toolchain. Don't strip either side.
+- Each frontend app's `src/amplify_outputs.json` IS committed. It contains
+  public Cognito User Pool IDs, AppSync endpoints, and the S3 bucket name —
+  needed at build time.
+- `repos/core/amplify_outputs.json` is **gitignored** because
+  `npx ampx sandbox` writes it per-developer. Copy from there into each app's
+  `src/amplify_outputs.json` after a sandbox redeploy.
+
+### Stage status (as of May 2026)
+
+- `repos/core` branch `stage` → the **stage backend** (Amplify Hosting
+  backend-only app runs `npx ampx pipeline-deploy --branch stage`).
+- The **stage Designer** is wired to it and **operational**: its committed
+  `repos/designer/src/amplify_outputs.json` points at Cognito User Pool
+  `eu-central-1_THCQaPWiv` / AppSync `jjscfn2izfhllgpo673kqvfd4e…eu-central-1`.
+- **Portal and Modeler are NOT yet re-pointed** — their committed
+  `amplify_outputs.json` still target the older pool
+  `eu-central-1_QTq7NVm2M`. Treat Portal/Modeler ↔ stage backend as **pending**;
+  don't assume all three apps share one stack until that re-point lands.
 
 ---
 
 ## 2. Sandbox workflow
 
 ```bash
-cd ~/digitalhomeCloud/digitalhome-cloud-darkfactory     # umbrella root
+cd ~/digitalhomeCloud/digitalhome-cloud-darkfactory/repos/core   # backend lives here
 npm install                                             # once
 
 # Deploy your personal sandbox stack (idempotent; cheap to re-run).
@@ -63,23 +91,30 @@ npx ampx sandbox                                        # foreground watch mode
 npx ampx sandbox --once                                 # one-shot deploy then exit
 npx ampx sandbox delete                                 # tear it down when finished
 
-# After a sandbox redeploy, propagate outputs to each app:
-cp amplify_outputs.json repos/portal/src/
-cp amplify_outputs.json repos/designer/src/
-cp amplify_outputs.json repos/modeler/src/
+# After a sandbox redeploy, propagate outputs to each app (run from repos/core):
+cp amplify_outputs.json ../portal/src/
+cp amplify_outputs.json ../designer/src/
+cp amplify_outputs.json ../modeler/src/
 ```
 
-**Stack name:** `amplify-digitalhomeclouddarkfactory-dhc-gen2-init-sandbox-...` (auto-generated, includes a developer hash). One stack per developer per checkout — fully isolated.
+**Stack name:** auto-generated, includes a developer hash — one stack per
+developer per checkout, fully isolated.
 
-**Frontend dev:** each app's `gatsby-browser.js` and `gatsby-ssr.js` import the local `src/amplify_outputs.json`. Run `yarn develop` (in the app dir) and the running sandbox is what you'll hit.
+**Frontend dev:** each app's `gatsby-browser.js` and `gatsby-ssr.js` import the
+local `src/amplify_outputs.json`. Run `yarn develop` (in the app dir) and the
+running sandbox is what you'll hit. From the umbrella, `scripts/dev-start-all.sh`
+seeds each app's `src/amplify_outputs.json` from `repos/core/amplify_outputs.json`
+if it's missing.
 
-**Don't** run `npx ampx sandbox` from inside a submodule — there's no `amplify/` directory there. It will fail or, worse, create one.
+**Run `npx ampx sandbox` from `repos/core`** — that is the submodule that owns
+`amplify/`. It will fail (or worse, scaffold a stray `amplify/`) if run from the
+umbrella root or a frontend submodule.
 
 ---
 
 ## 3. Authoring patterns
 
-### 3a. Adding / changing a data model (`amplify/data/resource.ts`)
+### 3a. Adding / changing a data model (`repos/core/amplify/data/resource.ts`)
 
 ```ts
 import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
@@ -156,7 +191,7 @@ The Lambda's `event.info.fieldName` will be `"requestDesignReadUrl"` at runtime 
 
 Two files:
 
-**`amplify/functions/<fnName>/resource.ts`:**
+**`repos/core/amplify/functions/<fnName>/resource.ts`:**
 ```ts
 import { defineFunction } from "@aws-amplify/backend";
 
@@ -168,7 +203,7 @@ export const myFunction = defineFunction({
 });
 ```
 
-**`amplify/functions/<fnName>/handler.ts`:**
+**`repos/core/amplify/functions/<fnName>/handler.ts`:**
 ```ts
 import type { AppSyncResolverHandler, AppSyncIdentityCognito } from "aws-lambda";
 import { env } from "$amplify/env/myFunction";
@@ -181,7 +216,7 @@ export const handler: AppSyncResolverHandler<unknown, unknown> = async (event) =
 };
 ```
 
-**Then wire it in `backend.ts`:**
+**Then wire it in `repos/core/amplify/backend.ts`:**
 ```ts
 import { myFunction } from "./functions/myFunction/resource";
 
@@ -195,7 +230,7 @@ If the function needs IAM beyond the default (e.g., DDB access, S3 access, Cogni
 
 ### 3d. Adding a Cognito group
 
-Edit `amplify/auth/resource.ts`:
+Edit `repos/core/amplify/auth/resource.ts`:
 ```ts
 export const auth = defineAuth({
   loginWith: { email: true },
@@ -215,7 +250,7 @@ The Cognito User Pool gets the new group on next deploy. **Don't add groups via 
 
 ### 3e. Adding a storage path
 
-Edit `amplify/storage/resource.ts`:
+Edit `repos/core/amplify/storage/resource.ts`:
 ```ts
 export const storage = defineStorage({
   name: "dhcStorage",
@@ -241,7 +276,8 @@ export const storage = defineStorage({
 
 ## 4. CDK escape hatches (cross-resource IAM, DDB knobs)
 
-When the high-level Amplify API doesn't expose a knob, drop into CDK in `amplify/backend.ts`. All examples are real patterns from this repo.
+When the high-level Amplify API doesn't expose a knob, drop into CDK in
+`repos/core/amplify/backend.ts`. All examples are real patterns from this repo.
 
 ### 4a. Grant a function S3 + DynamoDB access
 
@@ -324,7 +360,8 @@ The migration removed these Gen 1 artifacts. **Don't recreate them:**
 
 | Gone | Replaced by |
 |---|---|
-| `repos/portal/amplify/` (per-app backend dirs) | Single umbrella `amplify/` |
+| `repos/portal/amplify/` (per-app backend dirs) | Single `repos/core/amplify/` |
+| Umbrella-root `amplify/` + `package.json` + `tsconfig.json` | Moved into `repos/core` (one `amplify/` level per repo) |
 | `src/aws-exports.js` (everywhere) | `src/amplify_outputs.json` |
 | `src/aws-exports.deployment.js` (env-var shim) | `amplify_outputs.json` is already deploy-portable |
 | `scripts/sync-env.sh` (symlinks) | Direct file copy or `npx ampx generate outputs` |
@@ -343,7 +380,7 @@ If you see any of these in the codebase, it's **stale documentation** — flag i
 These are landmines we already stepped on. Knowing about them saves an hour each.
 
 ### 6a. `Cannot find module './auth/resource'`
-Initial sandbox deploy failed because TypeScript was emitting CommonJS but the imports use bare `./auth/resource` (no `.js` extension). **Fix:** add `"type": "module"` to umbrella `package.json` and ensure `tsconfig.json` has `"module": "es2022"` and `"moduleResolution": "bundler"` (lowercase, exact strings).
+Initial sandbox deploy failed because TypeScript was emitting CommonJS but the imports use bare `./auth/resource` (no `.js` extension). **Fix:** `repos/core/package.json` has `"type": "module"` and `repos/core/tsconfig.json` has `"module": "es2022"` and `"moduleResolution": "bundler"` (lowercase, exact strings). Keep them.
 
 ### 6b. `auth configuration error` after toggling globalAuthRule
 Originally the Gen 1 schema had `@auth(rules: [{ allow: public, provider: apiKey }])` and we tried switching to `private` mid-flight. **Fix in Gen 2:** there is no `globalAuthRule`. Each model has its own `.authorization()`; default-deny applies if you forget. So just don't reintroduce a public rule unless you have to.
@@ -361,7 +398,7 @@ Gatsby's webpack handles JSON imports natively.
 `amplify delete` from the Gen 1 directory deletes the autogen GraphQL TypeScript clients along with the backend. **Fix:** before running, copy them out (`cp -r repos/portal/src/graphql /tmp/`); restore after. Or pre-generate Gen 2 clients first via `npx ampx generate graphql-client-code --out repos/portal/src/graphql`.
 
 ### 6e. `amplify delete` doesn't delete non-default environments
-It only deletes the env you're currently in. **Fix:** delete the staging stack manually:
+It only deletes the env you're currently in. **Fix:** delete the leftover Gen 1 staging stack manually:
 ```bash
 aws cloudformation delete-stack --stack-name amplify-digitalhomecloudback-staging-...
 ```
@@ -370,54 +407,84 @@ aws cloudformation delete-stack --stack-name amplify-digitalhomecloudback-stagin
 The `dlab5_devops` IAM user used in this repo has gaps — for example, no `dynamodb:DescribeContinuousBackups`. That blocks **verification CLI calls** but not deployments. When verifying a CDK setting, **read the synthesized CFN template** in `.amplify/artifacts/cdk.out/` rather than relying on `aws <service> describe-...`.
 
 ### 6g. `requestDesignReadUrl` returns AccessDenied at runtime
-Symptom: the Lambda is invoked but S3 / DDB calls 403. Cause: the IAM grants in `backend.ts` weren't reapplied after a code-only change to `handler.ts`. **Fix:** trigger a redeploy by editing any file under `amplify/` (or run `npx ampx sandbox --once`). Code-only changes to handler bodies sometimes don't redeploy resource policies.
+Symptom: the Lambda is invoked but S3 / DDB calls 403. Cause: the IAM grants in `backend.ts` weren't reapplied after a code-only change to `handler.ts`. **Fix:** trigger a redeploy by editing any file under `repos/core/amplify/` (or run `npx ampx sandbox --once`). Code-only changes to handler bodies sometimes don't redeploy resource policies.
 
 ### 6h. `target=_blank` audit grep false-positive
 Audit recipe `grep -v "noopener\|noreferrer"` only sees one line at a time, but JSX usually splits attributes across lines. The `dhc-security-audit` skill's recipe uses a 2-line window now — match the same pattern in any new audit grepping.
+
+### 6i. The "two `amplify/` levels" conflict (why the backend lives in `core`)
+With `amplify/` at the umbrella root *and* `repos/core` (a submodule Amplify
+Hosting builds), `ampx`/tooling resolved the wrong `amplify/` and IDE/CDK
+context got confused. **Fix applied:** the backend moved into `repos/core`; the
+umbrella root has no `amplify/`/`package.json`/`tsconfig.json`. The Amplify
+`package.json` overwrote core's ontology-test `package.json` in the move — they
+are now **merged** in `repos/core/package.json` (vitest harness + Amplify
+toolchain). Don't "fix" core's package.json by dropping either half. Because
+that one lockfile serves two roles, `repos/core/amplify.yml` uses
+`npm install`, not `npm ci`.
 
 ---
 
 ## Verifying a backend change end-to-end
 
-1. **Author** the change in `amplify/`.
-2. `npx ampx sandbox --once` — confirm green deploy.
-3. `cp amplify_outputs.json repos/<app>/src/` for any frontend that needs the new config.
+1. **Author** the change in `repos/core/amplify/`.
+2. From `repos/core`: `npx ampx sandbox --once` — confirm green deploy.
+3. `cp repos/core/amplify_outputs.json repos/<app>/src/` for any frontend that needs the new config.
 4. `cd repos/<app> && yarn build` — confirm the frontend still builds.
 5. **For a security-sensitive change** (auth rule, IAM, storage path): run the `dhc-security-audit` skill afterward to confirm no new findings.
-6. Inspect synthesized CFN if a knob's effect isn't visible: `.amplify/artifacts/cdk.out/<stack>/<resource>.nested.template.json`.
-7. Commit. The Amplify Hosting build (`amplify.yml` per app) runs `npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID` automatically when you push.
+6. Inspect synthesized CFN if a knob's effect isn't visible: `repos/core/.amplify/artifacts/cdk.out/<stack>/<resource>.nested.template.json`.
+7. Commit in `repos/core`, bump the umbrella's `repos/core` submodule pointer, and push. **CI:** `repos/core/amplify.yml` runs `npm install` + `npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID` on push (a backend-only Amplify Hosting app). Each frontend app's own `amplify.yml` pulls the deployed config via `npx ampx generate outputs --branch $AMPLIFY_BACKEND_APP_BRANCH --app-id $AMPLIFY_BACKEND_APP_ID --out-dir ./src` in its `preBuild`.
 
 ---
 
-## Reference: minimum `package.json` + `tsconfig.json`
+## Reference: `repos/core/package.json` + `tsconfig.json`
+
+`repos/core/package.json` is dual-purpose — the ontology vitest harness **and**
+the Amplify backend toolchain live in one manifest:
 
 ```json
-// package.json (umbrella root)
+// repos/core/package.json
 {
-  "name": "digitalhome-cloud-darkfactory",
+  "name": "@dhc/digitalhome-cloud-core",
+  "version": "2.0.0",
+  "private": true,
   "type": "module",
   "scripts": {
-    "sandbox": "npx ampx sandbox",
-    "sandbox:once": "npx ampx sandbox --once",
-    "sandbox:delete": "npx ampx sandbox delete"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "amplify:sandbox": "ampx sandbox",
+    "amplify:sandbox:delete": "ampx sandbox delete",
+    "amplify:generate": "ampx generate graphql-client-code",
+    "amplify:pipeline-deploy": "ampx pipeline-deploy"
   },
   "devDependencies": {
     "@aws-amplify/backend": "^1.16.0",
     "@aws-amplify/backend-cli": "^1.7.0",
-    "@types/aws-lambda": "^8.10.0",
+    "@types/node": "^22.7.0",
+    "@zazuko/env-node": "^1.0.0",
+    "aws-cdk": "^2.158.0",
     "aws-cdk-lib": "^2.158.0",
-    "typescript": "^5.6.0"
+    "constructs": "^10.4.0",
+    "rdf-validate-shacl": "^0.6.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.0.0"
   },
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.658.0",
+    "aws-amplify": "^6.6.0",
     "@aws-sdk/client-s3": "^3.658.0",
-    "@aws-sdk/s3-request-presigner": "^3.658.0"
+    "@aws-sdk/s3-request-presigner": "^3.658.0",
+    "@aws-sdk/client-dynamodb": "^3.658.0",
+    "@aws-sdk/util-dynamodb": "^3.658.0",
+    "@aws-sdk/client-cognito-identity-provider": "^3.658.0",
+    "@types/aws-lambda": "^8.10.145",
+    "n3": "^1.17.4",
+    "@types/n3": "^1.16.4"
   }
 }
 ```
 
 ```json
-// tsconfig.json (umbrella root)
+// repos/core/tsconfig.json
 {
   "compilerOptions": {
     "target": "es2022",
@@ -427,6 +494,8 @@ Audit recipe `grep -v "noopener\|noreferrer"` only sees one line at a time, but 
     "esModuleInterop": true,
     "skipLibCheck": true,
     "paths": { "$amplify/*": ["./.amplify/generated/*"] }
-  }
+  },
+  "include": ["amplify/**/*"],
+  "exclude": ["node_modules", "repos", "**/.cache", "**/public", "**/build"]
 }
 ```

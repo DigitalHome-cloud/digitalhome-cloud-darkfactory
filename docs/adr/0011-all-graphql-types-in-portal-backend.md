@@ -2,7 +2,13 @@
 
 ## Status
 
-Accepted
+Accepted. **Updated (2026-05-15):** the principle still holds — all
+DynamoDB-backed GraphQL types live in **one shared backend schema** — but that
+schema is now the Amplify **Gen 2** `data/resource.ts` in the **`repos/core`
+submodule** (`repos/core/amplify/data/resource.ts`), not a Gen 1
+`schema.graphql` "in the portal backend". Read "portal owns the backend" /
+`aws-exports.deployment.js` references below as historical (see ADR 0003,
+ADR 0008).
 
 ## Date
 
