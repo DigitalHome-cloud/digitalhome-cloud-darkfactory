@@ -106,6 +106,16 @@ Remaining deferred items (push channel, DR, `cbox_pull`) are out of the v1 core-
 - [x] `expired_token` and `access_denied` on `/token` do not leak whether a given `device_code` ever existed (unknown code → `expired_token`). *Verified live.*
 - [x] Rate limits: `/token` 12/min per `device_code` (`slow_down`) enforced in-handler; API Gateway stage throttle 10 rps / burst 20. *`slow_down` verified live.*
 
+> **Two-step registration (2026-07-03):** The home is now **optional** at
+> approval. `approveDeviceCode(user_code, home_id?)` can register a box to the
+> user with no home; `/token` then returns `home_id: null`. The user assigns it
+> later from the Portal **"My Edges"** page (`/edges`) via `listMyEdges` +
+> `linkEdgeToHome(edge_id, home_id?)` (omit `home_id` to unassign). `EdgeRegistry`
+> gained a `byOwner` GSI (`linked_by_cognito_sub`); `/telemetry` now echoes the
+> current `home_id` so a box registered without a home learns its assignment
+> after linking. The one-step "pick a home during approval" path on `/link` still
+> works.
+>
 > **Implementation notes (2026-07-03):** Backed by `repos/core/amplify` — HTTP API v2 under `/edge/v1/*` (4 per-endpoint Lambdas), `DeviceCodes`/`EdgeRegistry` DynamoDB tables, and AppSync `approveDeviceCode`/`denyDeviceCode`/`describeDeviceCode` for the Portal `/link` page. The full RFC 8628 happy path (approve → token → telemetry → rotate, incl. the 60 s rotation grace and code consumption) plus all error codes were verified live. Stage uses the API Gateway `execute-api` URL; the `api.digitalhome.cloud` custom domain is deferred to prod cutover — point the edge box's Node-RED `cloudApiUrl` at the stage URL + `/edge/v1` to test.
 
 ## 7. Handoff sign-off
