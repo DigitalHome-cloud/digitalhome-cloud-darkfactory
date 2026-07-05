@@ -274,6 +274,13 @@ def main():
         if water:
             write_json(os.path.join(GOLD_DIR, aid, "water.json"), water)
 
+        # Lightning density (Ng) + surge-protection guidance — static climatology.
+        try:
+            from lightning import fetch_lightning
+            write_json(os.path.join(GOLD_DIR, aid, "lightning.json"), fetch_lightning(area))
+        except Exception as e:
+            print(f"    lightning skipped: {e}", flush=True)
+
     write_json(os.path.join(GOLD_DIR, "index.json"), index)
     print(f"gold written -> {GOLD_DIR}  ({len(index)} areas × {len(WINDOWS)} windows)")
 
