@@ -1,0 +1,6 @@
+lake/
+gold/
+__pycache__/
+*.pyc
+.venv/
+.idea/

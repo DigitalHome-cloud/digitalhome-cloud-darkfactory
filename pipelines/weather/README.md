@@ -10,11 +10,30 @@ pyarrow. Provider: **Open-Meteo** historical archive (ERA5) — free, no API key
 ## Layout
 - `config.py` — variables, table path (`WEATHER_LAKE` env, local by default)
 - `areas.json` — the 3 seed areas + centroid lat/lon + timezone
-- `fetch_openmeteo.py` — one area, one date-range → tidy DataFrame
-- `weather_ingest.py` — write to the bronze Delta table (idempotent per area/range)
+- `fetch_openmeteo.py` / `weather_ingest.py` — fetch + write bronze weather (idempotent)
+- `aq_ingest.py` — air-quality (CAMS, from 2013)
 - `backfill.py` — one-time historical load, chunked by year
+- `gold_aggregate.py` — per-area solar/wind/climate/rain/AQ **gold JSON**, per window
+  (`all / 10y / 5y / 3y / 1y`) → `gold/{areaId}/{window}/*.json` (+ `index.json`)
+- `drinking_water.py` — FR tap-water quality via Hub'Eau (best-effort) → `gold/{areaId}/water.json`
+- `run_daily.py` — **daily orchestrator**: trailing-window ingest → gold → upload to S3
 - `read_weather.py` — summary + sample filtered read
 - `manifest.json` — column → Brick class + QUDT unit
+
+## Daily run (Docker — spare PC now, ECS Fargate later)
+```bash
+docker build -t dhc-weather-pipeline pipelines/weather
+docker run --rm \
+  -e WEATHER_LAKE=s3://<bucket>/public/weather \
+  -e GOLD_S3=s3://<bucket>/public/weather/gold \
+  -e LOOKBACK_DAYS=10 \
+  -v ~/.aws:/root/.aws:ro \
+  dhc-weather-pipeline
+```
+Schedule with a systemd `.timer` (PC) or **EventBridge Scheduler → ECS RunTask** on
+Fargate (task role scoped to `public/weather/*`; default-VPC public subnet + public IP
+for API egress). `LOOKBACK_DAYS=10` re-fetches a trailing window each run because the
+ERA5 archive finalizes ~2–5 days late (idempotent overwrite).
 
 ## Run
 ```bash

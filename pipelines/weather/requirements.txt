@@ -5,3 +5,4 @@ pyarrow==24.0.0
 requests==2.32.3
 pvlib==0.15.2          # solar position + plane-of-array transposition (gold layer)
 scipy==1.18.0          # Weibull fit for wind (pvlib dep, pinned)
+boto3==1.40.15         # upload gold JSON to S3 (container run_daily)
