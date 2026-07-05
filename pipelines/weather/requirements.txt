@@ -3,3 +3,5 @@ deltalake==1.5.1
 pandas==3.0.2
 pyarrow==24.0.0
 requests==2.32.3
+pvlib==0.15.2          # solar position + plane-of-array transposition (gold layer)
+scipy==1.18.0          # Weibull fit for wind (pvlib dep, pinned)

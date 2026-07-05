@@ -1,5 +1,6 @@
-# Generated Delta Lake tables — regenerable via backfill.py, not source.
+# Generated Delta Lake tables + gold JSON — regenerable, published to S3, not source.
 lake/
+gold/
 # Python
 __pycache__/
 *.pyc
