@@ -1,0 +1,5 @@
+# Area weather data lake — pinned to match experimental/data reference stack.
+deltalake==1.5.1
+pandas==3.0.2
+pyarrow==24.0.0
+requests==2.32.3

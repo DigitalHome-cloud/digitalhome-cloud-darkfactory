@@ -1,0 +1,6 @@
+# Generated Delta Lake tables — regenerable via backfill.py, not source.
+lake/
+# Python
+__pycache__/
+*.pyc
+.venv/
