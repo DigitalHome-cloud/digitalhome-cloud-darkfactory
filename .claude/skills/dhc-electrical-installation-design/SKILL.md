@@ -82,12 +82,37 @@ not carry.
 | Concept | Use |
 |---|---|
 | Generation | `brick:PV_Generation_System`, `brick:PV_Array`, `brick:PV_Panel`, `brick:Photovoltaic_Inverter` |
-| Storage | `brick:Battery`, `brick:Energy_Storage_System` |
-| Loads | `brick:Luminaire`, `brick:Electric_Vehicle_Charging_Station`, `s223:ElectricOven`, `s223:ElectricCooktop`, `brick:Water_Heater` |
+| Storage | `brick:Battery` + `s223:Battery` (multi-type) |
+| **Hybrid inverter** | `s223:ElectricEnergyInverter` **alongside** `brick:Photovoltaic_Inverter` — see below |
+| Loads | `brick:Luminaire`, `brick:Electric_Vehicle_Charging_Station`, `s223:ElectricOven`, `s223:ElectricCooktop`, `s223:ClothesWasher`, `s223:Dishwasher`, `brick:Water_Heater` |
 | Automation | `brick:Controller` + `brick:controls` |
 | Topology | `s223:hasConnectionPoint`, `s223:connectsThrough`, `s223:cnx`, `brick:feeds` |
-| Media | `s223:AC-230VLN-1Ph-50Hz`, `s223:Electricity-Neutral`, `s223:Electricity-Earth` |
+| Media | `s223:AC-230VLN-1Ph-50Hz`, `s223:Electricity-Neutral`, `s223:Electricity-Earth`, `s223:DC-48V`, `s223:DC-380V` |
 | Ratings | `brick:ratedCurrentOutput`, `brick:ratedPowerOutput`, `brick:electricalPhaseCount` |
+
+**A hybrid inverter needs the 223P type.** `brick:Photovoltaic_Inverter` has no
+connection points at all, so a node typed only that way is invisible to the
+conductor layer — which is how the demo's Deye sat for months as five characters
+of `rdfs:label`. `s223:ElectricEnergyInverter` requires ≥1 CP on medium
+`Electricity-AC` **and** ≥1 on `Electricity-DC`, which is exactly the hybrid
+shape. Type it both: Brick says what it is, 223P says how it connects.
+
+**`brick:feeds` is `owl:AsymmetricProperty` + `owl:IrreflexiveProperty`, and has
+no domain or range.** So it will connect anything (board → breaker → load is
+fine), but asserting *both* `battery feeds inverter` and `inverter feeds battery`
+is an OWL inconsistency — and **no reasoner runs in this stack, so nothing will
+ever tell you.** Assert the one direction that is the generator flow
+(discharge), and express import/export and charge/discharge with
+`s223:BidirectionalConnectionPoint`.
+
+**Check what a class drags in before typing something with it.** `s223:ClothesWasher`
+requires an outlet on medium `Fluid-Water` — the drain. An electrical model has
+no plumbing, so `ex:washing-machine` carries that as a known gap
+(`doc/parking-lot.md` § 3) rather than growing a domain to satisfy an axiom.
+Nothing enforces it today: `build-abox.mjs` parses `Brick+extensions.ttl` only
+for the equipment closure and never runs its ~3237 shapes. Also note
+`dhc:powerRating` has `rdfs:domain brick:Equipment` — retyping a load to a 223P
+class *alone* silently violates it. Multi-type.
 
 ### The irreducible `dhc:` residue — and why each exists
 
@@ -104,6 +129,15 @@ Absent from **both** Brick 1.5 and the full 223P (grep them before adding more):
   wrongly *infer* types. `dhc:ratedCurrent` / `dhc:crossSection` are
   domain-less for the same reason — they carry design intent on the Circuit
   *and* device fact on the breaker/wire.
+  **Name the norm, never the edition.** There is no `dhc:builtUnder`; it existed
+  briefly and was purged. Compliance is *computed* by validating against every
+  edition that has shapes and comparing the verdicts (`dhc:shapesFile` +
+  `dhc:supersedes` + `dhc:latestEdition`), so an A-Box that asserted which
+  edition it was built to would be stating something the C-Box derives — and
+  usually stating it wrongly, since a surveyed installation rarely records its
+  edition. Passing the current edition is green; passing an older one and
+  failing the current is grandfathered. See `repos/core/js-tools/README.md`
+  § Compliance.
 - `dhc:RCD` / `dhc:RCBO` + `dhc:sensitivityMA` + `dhc:rcdType` — residual-current
   protection. Zero hits for residual-current / ground-fault / earth-leakage in
   either ontology, so the 30 mA Type A differential has nowhere else to live.
@@ -215,15 +249,33 @@ the only evidence the chain is alive.
 
 The canonical one (`schema/abox/electrical-installation-house.ttl`): `ex:circuit-ev-legacy`, a 32 A
 single-phase IRVE circuit wired in 1.5 mm² where NF C 15-100 demands ≥ 10 mm².
-Expected result, and the bar for any change:
+
+**State the bar PER EDITION.** Once more than one edition is validated a single
+"violations: N" is ambiguous, and the two numbers mean opposite things — a
+violation under a superseded edition is the *grandfathering* signal, not
+non-compliance:
 
 ```
-focus nodes (a dhc:Circuit): 7      ← not vacuous
-conforms: false
-violations: 1                        ← exactly one, no false positives
-  focus : ex:circuit-ev-legacy
-  shape : nfc15100:IRVE32AMonoShape
+focus nodes (a dhc:Circuit): 7                  ← not vacuous
+
+dhc:NormEdition_NFC15100_2015 (superseded): 1 violation
+  ✗ ex:circuit-ev-legacy   nfc15100:IRVE32AMonoShape     ← the deliberate defect
+
+dhc:NormEdition_NFC15100_2024 (in force):   3 violations
+  ✗ ex:circuit-ev          nfc15100-2024:IRVE32AMono2024Shape   ← GRANDFATHERED, not broken
+  ✗ ex:circuit-ev-legacy   (both shapes)
+
+conforms: false                                 ← against the edition in force
 ```
+
+Two things must hold, and they fail differently:
+
+- **`ex:circuit-ev-legacy` must fail the OLDEST edition.** Failing only the
+  current one would make it *grandfathered* — i.e. lawful — which is the
+  opposite of what the file exists to demonstrate.
+- **`ex:circuit-ev` must fail the CURRENT edition and pass the older one.** If
+  it goes green, the 2024 delta is a no-op, yellow never appears anywhere, and
+  the whole edition mechanism reports success while proving nothing.
 
 **If electrical-installation-house.ttl ever conforms, the chain is broken — do not "fix" it by
 correcting the cross-section.** This is exactly how the dead `sh:hasValue 32`
@@ -241,7 +293,7 @@ that silence *was* the bug.
 | `repos/core/schema/cbox/electrical/*.shapes.ttl` | yes | yes — norm rules |
 | `repos/core/schema/cbox/cbox-manifest.json` | yes | yes — when adding a profile |
 | `repos/core/tests/fixtures/*.ttl` | yes | yes — valid+invalid pair per shape |
-| `repos/core/tests/cbox/<norm>.test.js` | yes | yes |
+| `repos/core/tests/cbox/<norm>-<year>.test.js` | yes | yes |
 | `repos/core/tests/_helpers/loadGraph.js` | yes | reuse — do not reimplement |
 
 ## Verification protocol
@@ -269,7 +321,7 @@ authored against the JS validator.
 4. **No false positives**: the compliant circuits produce no results.
 5. **T-Box join (A-Box)**: every `dhc:` term you used resolves in
    `dhc-core.ttl`. Enforced by test; run it before believing a green result.
-6. **T-Box join (shapes)**: `tests/cbox/nfc15100.test.js` asserts every
+6. **T-Box join (shapes)**: `tests/cbox/nfc15100-2015.test.js` asserts every
    `sh:targetClass` and `dhc:` `sh:path` resolves.
 7. **223P structural check** (free): validate against `Brick+extensions.ttl`'s
    own ~3237 NodeShapes — every `ElectricityBreaker` gets its electricity
@@ -358,9 +410,17 @@ had checked. Expect the same of any A-Box written before this rule existed.
 - **Norm profiles are country-scoped only by which shapes file you load.**
   Nothing guards on `dhc:governedBy`; loading `bs7671.shapes.ttl` against a
   French home would apply UK rules.
-- **The 4 NF C `NormEdition`s carry `dhc:shapesFile` paths** pointing at a
-  per-edition layout (`cbox/nfc15100/nfc15100-2024.shapes.ttl`) that does not
-  exist; reality is one file per norm under `cbox/electrical/`.
+- **The NF C 15-100:2024 shapes are ILLUSTRATIVE, not law.** Nobody has read the
+  published text. `cbox/electrical/nfc15100-2024.shapes.ttl` encodes two
+  plausible stand-ins (IRVE cross-section 10 → 16 mm²; energy storage coming
+  into scope), marked `UNVERIFIED` on the header and every shape. They exist so
+  the multi-edition machinery has something real to compute. Do not quote them
+  and do not let them inform a real installation.
+- **NF C 14-100's edition in force has no shapes.** `NormEdition_NFC14100_2008`
+  implements `nfc14100-2008.shapes.ttl`; 2021 is `dhc:latestEdition` and
+  implements nothing, so `ex:delivery` / `ex:meter` / `ex:agcp` come out
+  green-but-ghosted — they pass what we hold and cannot be proven current.
+  `tests/tbox/norm-editions.test.js` pins this as the one expected exception.
 
 ## Out of scope
 
