@@ -2,6 +2,7 @@
 amplify_outputs.json
 amplify_outputs.d.ts
 .amplify/
+experimental/
 
 # Gen 1 codegen leftover — `amplify codegen` writes this; we don't use it anymore.
 # Kept ignored in case any old branch / tooling regenerates it locally.
@@ -16,6 +17,7 @@ todo/
 
 # Dependencies
 node_modules/
+.venv/
 
 # Gatsby
 .cache/
