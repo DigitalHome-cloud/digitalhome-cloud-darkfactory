@@ -129,15 +129,19 @@ Absent from **both** Brick 1.5 and the full 223P (grep them before adding more):
   wrongly *infer* types. `dhc:ratedCurrent` / `dhc:crossSection` are
   domain-less for the same reason — they carry design intent on the Circuit
   *and* device fact on the breaker/wire.
-  **Name the norm, never the edition.** There is no `dhc:builtUnder`; it existed
-  briefly and was purged. Compliance is *computed* by validating against every
-  edition that has shapes and comparing the verdicts (`dhc:shapesFile` +
-  `dhc:supersedes` + `dhc:latestEdition`), so an A-Box that asserted which
-  edition it was built to would be stating something the C-Box derives — and
-  usually stating it wrongly, since a surveyed installation rarely records its
-  edition. Passing the current edition is green; passing an older one and
-  failing the current is grandfathered. See `repos/core/js-tools/README.md`
-  § Compliance.
+  **`dhc:governedBy` names the norm; compliance against its editions is
+  COMPUTED, not declared.** build-abox.mjs validates against every edition that
+  has shapes and compares the verdicts (`dhc:shapesFile` + `dhc:supersedes` +
+  `dhc:latestEdition`): passing the edition in force is green, passing an older
+  one and failing the current means it fails today.
+  **`dhc:builtUnder` is OPTIONAL evidence, not a verdict** — add it only when the
+  build edition is actually known (a designed home, mode 2), never invent it for
+  a reverse-engineered one. With it, "fails the current edition" resolves to
+  grandfathered (passes the edition it names → solid yellow) or illegal-as-built
+  (fails the edition it names → red). Without it the node is ghosted yellow:
+  honest that grandfathered and newly-illegal cannot be told apart. Range is
+  `dhc:NormEdition`. See `repos/core/js-tools/README.md` § Compliance and the
+  worked `schema/abox/compliance-states.ttl`.
 - `dhc:RCD` / `dhc:RCBO` + `dhc:sensitivityMA` + `dhc:rcdType` — residual-current
   protection. Zero hits for residual-current / ground-fault / earth-leakage in
   either ontology, so the 30 mA Type A differential has nowhere else to live.
