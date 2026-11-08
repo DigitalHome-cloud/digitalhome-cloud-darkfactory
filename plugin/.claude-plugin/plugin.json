@@ -1,0 +1,10 @@
+{
+  "name": "dhc",
+  "version": "1.0.0",
+  "description": "DigitalHome.Cloud's own skills: the Amplify Gen 2 backend, implementing a Claude Design handoff, the T-Box and its ontology explorer, Blockly design views (spatial, electrical), the floor-plan demo, and device discovery.",
+  "author": { "name": "D-LAB-5" },
+  "homepage": "https://github.com/DigitalHome-cloud/digitalhome-cloud-darkfactory",
+  "repository": "https://github.com/DigitalHome-cloud/digitalhome-cloud-darkfactory",
+  "license": "MIT",
+  "keywords": ["digitalhome", "amplify", "blockly", "ontology"]
+}

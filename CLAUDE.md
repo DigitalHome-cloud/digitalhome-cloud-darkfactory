@@ -88,6 +88,12 @@ Release specs live in `docs/specs/vX.Y.Z.md` — one living document per target 
 
 Significant architectural decisions are documented in `docs/adr/` using numbered ADR files. When making a decision that affects multiple repos or sets a lasting pattern, write an ADR.
 
+**Agent skills live in `plugin/`**, the `dhc` plugin, which the d-lab-5
+catalogue (d-lab-5/agent-skills) lists. `.claude/settings.json` enables it and
+`dlab5-house` for every session here, local or cloud. Don't copy a skill into
+`.claude/skills/` or into an app under `repos/`: edit it in `plugin/`, and bump
+its version. The security audit is `dlab5-security-audit`, in `dlab5-house`.
+
 ## Cross-Repo Conventions
 
 ### Branches
