@@ -70,11 +70,10 @@ repos/modeler/   src/amplify_outputs.json           ← committed
 - `repos/core` branch `stage` → the **stage backend** (Amplify Hosting
   backend-only app runs `npx ampx pipeline-deploy --branch stage`).
 - The **stage Designer** is wired to it and **operational**: its committed
-  `repos/designer/src/amplify_outputs.json` points at Cognito User Pool
-  `eu-central-1_THCQaPWiv` / AppSync `jjscfn2izfhllgpo673kqvfd4e…eu-central-1`.
+  `repos/designer/src/amplify_outputs.json` points at the stage backend's
+  Cognito user pool and AppSync API (compare the ids in that file).
 - **Portal and Modeler are NOT yet re-pointed** — their committed
-  `amplify_outputs.json` still target the older pool
-  `eu-central-1_QTq7NVm2M`. Treat Portal/Modeler ↔ stage backend as **pending**;
+  `amplify_outputs.json` still target the older user pool. Treat Portal/Modeler ↔ stage backend as **pending**;
   don't assume all three apps share one stack until that re-point lands.
 
 ---

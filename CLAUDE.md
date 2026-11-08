@@ -59,7 +59,13 @@ The **`repos/core` submodule owns the single Amplify Gen 2 backend** under `repo
 
 **Stage status:** the stage backend (`repos/core` branch `stage`) is live and the **stage Designer is wired to it and operational**. Portal and Modeler still point at the previous Cognito pool — re-pointing them is pending.
 
-For backend authoring, sandbox workflow, and CDK escape-hatch patterns, see the `dhc-amplify-gen2` skill (`.claude/skills/dhc-amplify-gen2/SKILL.md`).
+For backend authoring, sandbox workflow, and CDK escape-hatch patterns, see the `dhc-amplify-gen2` skill (`plugin/skills/dhc-amplify-gen2/SKILL.md`).
+
+**Agent skills live in `plugin/`**, the `dhc` plugin, which the d-lab-5
+catalogue (d-lab-5/agent-skills) lists. `.claude/settings.json` enables it and
+`dlab5-house` for every session here, local or cloud. Don't copy a skill into
+`.claude/skills/` or into an app under `repos/`: edit it in `plugin/`, and bump
+its version. The security audit is `dlab5-security-audit`, in `dlab5-house`.
 
 ### Authentication
 

@@ -72,5 +72,5 @@ curl -sI "https://auth.digitalhome.cloud/oauth2/authorize?client_id=<app-client-
 
 - AWS Console: Cognito → User Pools → `eu-central-1_QTq7NVm2M` → App Integration → Custom domain.
 - Comments: `amplify/auth/resource.ts` lines 15–23 — already document the future Google-federation steps.
-- Skill: `.claude/skills/dhc-amplify-gen2/SKILL.md` section 4 — CDK escape-hatch patterns (relevant if/when this domain gets moved into IaC).
+- Skill: `plugin/skills/dhc-amplify-gen2/SKILL.md` section 4 — CDK escape-hatch patterns (relevant if/when this domain gets moved into IaC).
 - Prior ADRs: 0003 (Amplify Gen 2 backend), 0005 (Cognito auth with group-based access).

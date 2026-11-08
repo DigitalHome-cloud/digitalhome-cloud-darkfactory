@@ -106,7 +106,7 @@ Branch mapping (all repos): `stage` → staging, `main` → production.
 
 ## See also
 
-- `dhc-amplify-gen2` skill (`.claude/skills/dhc-amplify-gen2/SKILL.md`) —
+- `dhc-amplify-gen2` skill (`plugin/skills/dhc-amplify-gen2/SKILL.md`) —
   authoring patterns, sandbox workflow, CDK escape hatches, migration gotchas.
 - ADR 0003 — Amplify backend generation decision (Gen 1 → Gen 2 history).
 - ADR 0008 — umbrella repo with submodules (records the backend relocation).
