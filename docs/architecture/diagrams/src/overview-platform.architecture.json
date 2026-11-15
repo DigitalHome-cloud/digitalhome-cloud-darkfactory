@@ -1,0 +1,343 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "How DigitalHome.Cloud fits together",
+    "locale": "en",
+    "output": "docs/architecture/diagrams/overview-platform.html",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    {
+      "id": "people",
+      "type": "external",
+      "label": "People",
+      "sublabel": "owners, designers, admins",
+      "pos": [
+        40,
+        230
+      ],
+      "size": [
+        140,
+        110
+      ]
+    },
+    {
+      "id": "portal",
+      "type": "frontend",
+      "label": "Portal",
+      "sublabel": "Fleet, Marketplace, /link",
+      "pos": [
+        235,
+        130
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "designer",
+      "type": "frontend",
+      "label": "Designer",
+      "sublabel": "Blockly, NF C 15-100, 3D",
+      "pos": [
+        235,
+        255
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "modeler",
+      "type": "frontend",
+      "label": "Modeler",
+      "sublabel": "ontology viewer",
+      "pos": [
+        235,
+        380
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "cognito",
+      "type": "security",
+      "label": "Cognito",
+      "sublabel": "one user pool, groups",
+      "pos": [
+        470,
+        40
+      ],
+      "size": [
+        160,
+        64
+      ],
+      "tag": "TOTP for admins"
+    },
+    {
+      "id": "appsync",
+      "type": "backend",
+      "label": "AppSync + Lambdas",
+      "sublabel": "GraphQL for the apps",
+      "pos": [
+        470,
+        255
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "edgeapi",
+      "type": "backend",
+      "label": "Edge API",
+      "sublabel": "HTTP /edge/v1/*",
+      "pos": [
+        470,
+        500
+      ],
+      "size": [
+        160,
+        64
+      ],
+      "tag": "RFC 8628"
+    },
+    {
+      "id": "ddb",
+      "type": "database",
+      "label": "DynamoDB",
+      "sublabel": "homes, devices, edges",
+      "pos": [
+        715,
+        375
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "s3",
+      "type": "database",
+      "label": "S3",
+      "sublabel": "designs, A-Box, market",
+      "pos": [
+        470,
+        375
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "proedge",
+      "type": "backend",
+      "label": "Pro edge",
+      "sublabel": "design with Claude",
+      "pos": [
+        950,
+        440
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "devopsedge",
+      "type": "backend",
+      "label": "DevOps edge",
+      "sublabel": "Node-RED + MQTT",
+      "pos": [
+        950,
+        570
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "devices",
+      "type": "external",
+      "label": "Home devices",
+      "sublabel": "CCU, Hue, phones",
+      "pos": [
+        950,
+        700
+      ],
+      "size": [
+        160,
+        64
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Amplify Hosting: Gatsby sites",
+      "wraps": [
+        "portal",
+        "designer",
+        "modeler"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "Amplify Gen 2 backend (core)",
+      "wraps": [
+        "cognito",
+        "appsync",
+        "edgeapi",
+        "ddb",
+        "s3"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "On site: a PC, a home server",
+      "wraps": [
+        "proedge",
+        "devopsedge",
+        "devices"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "use-portal",
+      "from": "people",
+      "to": "portal",
+      "label": "HTTPS",
+      "variant": "emphasis"
+    },
+    {
+      "id": "use-designer",
+      "from": "people",
+      "to": "designer",
+      "label": "HTTPS",
+      "variant": "emphasis"
+    },
+    {
+      "id": "use-modeler",
+      "from": "people",
+      "to": "modeler",
+      "label": "HTTPS"
+    },
+    {
+      "id": "portal-api",
+      "from": "portal",
+      "to": "appsync",
+      "label": "GraphQL"
+    },
+    {
+      "id": "designer-api",
+      "from": "designer",
+      "to": "appsync",
+      "label": "GraphQL",
+      "variant": "emphasis"
+    },
+    {
+      "id": "modeler-api",
+      "from": "modeler",
+      "to": "appsync",
+      "label": "GraphQL"
+    },
+    {
+      "id": "token-check",
+      "from": "cognito",
+      "to": "appsync",
+      "label": "token + groups",
+      "variant": "security"
+    },
+    {
+      "id": "api-ddb",
+      "from": "appsync",
+      "to": "ddb",
+      "label": "records"
+    },
+    {
+      "id": "api-s3",
+      "from": "appsync",
+      "to": "s3",
+      "label": "files"
+    },
+    {
+      "id": "edge-ddb",
+      "from": "edgeapi",
+      "to": "ddb",
+      "label": "registry"
+    },
+    {
+      "id": "edge-s3",
+      "from": "edgeapi",
+      "to": "s3",
+      "label": "graphs"
+    },
+    {
+      "id": "pro-sync",
+      "from": "proedge",
+      "to": "edgeapi",
+      "label": "link, market sync",
+      "variant": "security"
+    },
+    {
+      "id": "devops-sync",
+      "from": "devopsedge",
+      "to": "edgeapi",
+      "label": "link, telemetry",
+      "variant": "security"
+    },
+    {
+      "id": "devops-devices",
+      "from": "devopsedge",
+      "to": "devices",
+      "label": "flows"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Three web apps",
+      "items": [
+        "Portal: homes and their edges (Fleet), the marketplace, approving an edge at /link",
+        "Designer: the home's design in Blockly, checked against NF C 15-100",
+        "Modeler: the ontology, read-only for most"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "One backend",
+      "items": [
+        "repos/core/amplify: Cognito, AppSync, DynamoDB, S3, Lambdas",
+        "The SmartHome ID partitions every record and file",
+        "Admin and editor groups reach a token only with TOTP"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Edges",
+      "items": [
+        "Link by device flow; the Portal approves the code",
+        "Pro edge: electrical design with Claude; partner catalogues sync with the marketplace, prices stay local",
+        "DevOps edge: Node-RED owns the devices; phones speak MQTT"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Knowledge",
+      "items": [
+        "T-Box in repos/core/schema: dhc-core plus norm modules",
+        "Marketplace: one SHACL-checked Turtle graph per seller",
+        "Each home's A-Box lives in S3, never in public docs"
+      ]
+    }
+  ]
+}

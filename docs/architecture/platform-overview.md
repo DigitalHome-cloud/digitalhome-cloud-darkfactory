@@ -3,6 +3,11 @@
 This document provides a short initial version of the DigitalHome.Cloud environment
 strategy and platform architecture.
 
+The picture of the whole platform today, with the apps, the backend and the
+edges: [How DigitalHome.Cloud fits together](diagrams/overview-platform.html)
+(source: `diagrams/src/overview-platform.architecture.json`, rendered with
+Archify; edit the source, never the page).
+
 ---
 
 ## 1. Environment Strategy

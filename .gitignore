@@ -37,3 +37,8 @@ Thumbs.db
 .idea/
 .vscode/
 *.code-workspace
+
+# Archify receipts: they hold local paths; the source and the page are committed
+docs/architecture/diagrams/*.finalize*.json
+docs/architecture/diagrams/*.delivery.json
+docs/architecture/diagrams/*.browser-check.json
