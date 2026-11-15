@@ -1,6 +1,6 @@
 ---
 name: dhc-device-autodiscovery
-description: Discover physical smart-home devices from on-site gateways (the OpenCCU XML API and a Philips Hue bridge on the site's LAN) and emit inventory CSVs (the Portal's import format) plus product images, which go into a seller's catalogue on the digitalhome.cloud marketplace (ADR 0016). Trigger this skill for "auto-discover devices", "fetch inventory from CCU", "scan the Hue bridge", "add a new device type to the catalogue", "rerun the inventory", "put the discovered devices into the marketplace", or when extending `build_inventory_from_openccu.py`, `build_inventory_from_huebridge.py`, `download_device_images.py`, or `upload_catalogue_images.py` under `experimental/catalogue/`. Do NOT trigger for editing single marketplace articles in the Portal (Inventory → Marketplace), nor for the A-Box / SmartHome instance work that lives in the Designer's design page.
+description: Discover physical smart-home devices from on-site gateways (the OpenCCU XML API and a Philips Hue bridge on the site's LAN) and emit inventory CSVs (the Portal's import format) plus product images, which go into a seller's catalogue on the digitalhome.cloud marketplace (ADR 0016). Trigger this skill for "auto-discover devices", "fetch inventory from CCU", "scan the Hue bridge", "add a new device type to the catalogue", "rerun the inventory", "put the discovered devices into the marketplace", or when extending `build_inventory_from_openccu.py`, `build_inventory_from_huebridge.py`, `download_device_images.py`, `upload_market_images.py`, or `upload_catalogue_images.py` under `experimental/catalogue/`. Do NOT trigger for editing single marketplace articles in the Portal (Inventory → Marketplace), nor for the A-Box / SmartHome instance work that lives in the Designer's design page.
 ---
 
 # DHC Device Auto-Discovery
@@ -19,10 +19,10 @@ Trigger on any of:
 - "Fetch the inventory from the CCU / Hue bridge / KNX line."
 - "Add a new device type to the catalogue."
 - "Re-run the inventory now that we paired a new Hue light."
-- "Upload the catalogue images to S3."
+- "Upload the catalogue images" / "bulk-upload the device images into the marketplace."
 - "Why is `HmIP-XYZ` showing up as `Unknown` brand?"
 - Edits to any file in `experimental/catalogue/build_inventory_*.py`,
-  `download_device_images.py`, `upload_catalogue_images.py`, the per-site
+  `download_device_images.py`, `upload_market_images.py`, the per-site
   CSVs, or `images/`.
 
 Do **not** trigger for:
@@ -41,6 +41,7 @@ experimental/catalogue/
   build_inventory_from_openccu.py    # HomeMatic CCU3 (<ccu-host>)
   build_inventory_from_huebridge.py  # Philips Hue bridge (<hue-host>)
   download_device_images.py          # pulls device PNGs from the CCU
+  upload_market_images.py            # bulk images/datasheets into a seller's articles (marketUploads)
   upload_catalogue_images.py         # RETIRED: wrote public/catalogue/, nothing reads it
   device-inventory-DLAB5.csv         # CCU rows, one per physical device
   device-inventory-DLAB5-hue.csv     # Hue rows: the lights and the bridge
@@ -157,9 +158,35 @@ has no reader any more — do not run it.**
    `public/market/<seller>/sha256/<hash>.png`; the first image is the
    thumbnail. A file the seller already has is not sent again.
 
-Bulk image upload from a script is not there yet: it would have to go
-through the `marketUploads` mutation as an editor (the PUTs are bound to the
-file's SHA-256), not to S3 directly.
+3. **Many images at once:** `upload_market_images.py` does what the form
+   does, for every file. It reads the seller's articles (`marketArticles`),
+   asks for grants by content (`marketUploads`), PUTs only what the seller
+   does not have (each PUT is bound to the file's SHA-256), then names the
+   files on the articles (`editMarketArticle`, the fact-level merge). PDFs go
+   to `datasheet`, images to `image`, appended after existing images unless
+   `--cover` makes the new one the thumbnail. A file the article already
+   names is skipped, so a rerun changes nothing.
+
+   ```bash
+   cd experimental/catalogue
+   python3 upload_market_images.py --seller digitalhome-cloud \
+       --csv device-inventory-DLAB5.csv --csv device-inventory-DLAB5-hue.csv \
+       --images images --dry-run          # then again without --dry-run
+   ```
+
+   Files map to articles through the CSV's `modelNumber` → `imageUrl`, and/or
+   `--images DIR` with files named `<reference>.<ext>` (exact, else
+   case-insensitive). Articles must exist (step 1); unknown references are
+   reported as MISS. The backend comes from `repos/portal/src/amplify_outputs.json`
+   (`--outputs` for another).
+
+   **Sign-in:** the script takes the **refresh token** of a Portal session
+   (`$DHC_REFRESH_TOKEN`, `--token-file`, or a hidden prompt), never a password
+   or TOTP code. The user copies it from the browser's Local Storage key
+   `CognitoIdentityServiceProvider.<clientId>.<user>.refreshToken`. Never ask
+   for it in chat, put it on a command line or in a tracked file. If the token
+   lacks `market-<seller>`, the user is not an editor yet, has no
+   authenticator app, or signed in before being added.
 
 ## Gateway gotchas
 
@@ -179,7 +206,7 @@ file's SHA-256), not to S3 directly.
   `download_device_images.py::CCU_IMAGE_FILENAME` because the typecode is not
   derivable from the `device_type` string. Eight HmIP/HM types currently lack
   a CCU-shipped image — drop a manually-sourced PNG into `images/<device_type>.png`
-  and the upload script will pick it up on next run.
+  and `upload_market_images.py --images images` will pick it up on the next run.
 
 ### Philips Hue (<hue-host>)
 
@@ -216,14 +243,14 @@ When a new CCU `device_type` ships an image:
 1. Find the filename in `https://github.com/jens-maus/occu/tree/master/WebUI/www/config/img/devices/250/`.
 2. Add the mapping to `CCU_IMAGE_FILENAME` in `download_device_images.py`.
 3. Re-run `download_device_images.py` and attach the new image to the
-   article (step 4).
+   article (step 4, or `upload_market_images.py`).
 
 ## Non-goals
 
 - **Writing the marketplace directly** — by design. This skill stops at the
   CSV and the local images; a seller's editor brings them in through the
-  Portal (step 4), where the merge, the SHACL shapes and the version checks
-  apply. Never write `market/graphs/` or `public/market/` in S3 by hand.
+  Portal or `upload_market_images.py` (step 4) — both go through the market
+  Lambda, where the merge, the SHACL shapes and the version checks apply. Never write `market/graphs/` or `public/market/` in S3 by hand.
 - **A-Box / instance-data writes** — instance rows belong to the SmartHome
   design owned by the Designer's design page.
 - **Per-tenant or per-SmartHome inventory uploads** — the `--smarthome-id`
