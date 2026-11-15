@@ -205,6 +205,7 @@ git checkout stage
   - 0011: All GraphQL types in portal backend schema
   - 0012: Modular ontology architecture (Core + Norm Modules)
   - 0013: Platform-agnostic design guide
+  - 0016: The device catalogue is a marketplace of seller graphs (DeviceModel retired)
 
 ## Deployment
 

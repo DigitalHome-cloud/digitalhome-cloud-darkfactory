@@ -48,8 +48,10 @@ registration itself; the others use the link once it exists):
 | `POST /edge/v1/telemetry` | Bearer `device_token` | Full + delta heartbeat, returns C-BOX freshness flag. |
 | `POST /edge/v1/token/rotate` | Bearer `device_token` | Rolling refresh; 60 s dual-valid window. |
 | `POST /edge/v1/homes` | Bearer `device_token` | The homes the person who linked the edge may see, with each home's site URL. |
-| `POST /edge/v1/catalogue` | Bearer `device_token` | The global device catalogue (`DeviceModel`), models changed since `since`, paged by `cursor`; returns `now` for the next call. No S3 paths or thumbnails. |
-| `POST /edge/v1/catalogue/put` | Bearer `device_token` | Create or update one model (only the fields sent). Allowed only while the person who linked the edge is in `dhc-admins` with TOTP, asked of Cognito on every call; else 403 `not_allowed`. Unknown fields → 400 `invalid_model`. |
+| `POST /edge/v1/market/sellers` | Bearer `device_token` | The marketplace's sellers (`id`, `name`, `kind`, `version`, `articles`) with `mayEdit`: the person who linked the edge is in the seller's group `market-<id>` (or `dhc-admins`) with TOTP, asked of Cognito on every call. See ADR-0016. |
+| `POST /edge/v1/market/graphs/get` | Bearer `device_token` | `{name}` → the seller's catalogue graph: `version` and a 15-minute presigned GET of its Turtle. |
+| `POST /edge/v1/market/graphs/put` | Bearer `device_token` | Two steps. `{name, baseVersion}` → a presigned PUT to a staging key; `{name, baseVersion, key, commit: true}` → validated (SHACL, no price, IRIs under `id/market/<seller>/`) and swapped: 200 `{version}`, 409 `version_conflict` with `current`, 422 `invalid` with `problems`, 403 `not_allowed` unless `mayEdit`. |
+| `POST /edge/v1/market/uploads` | Bearer `device_token` | `{seller, files: [{sha256, ext, size}]}` → per file `exists`, or a presigned PUT bound to the SHA-256 and `If-None-Match: *` to `public/market/<seller>/sha256/<hash>.<ext>`. Editors only. |
 
 Two DynamoDB tables:
 
