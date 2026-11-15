@@ -43,6 +43,13 @@ for app in portal designer modeler; do
 done
 ```
 
+### Start Claude Code
+
+```bash
+./start-claude.sh                   # here, with ../digitalhome-devops-edge and ../digitalhome-pro-edge added
+./start-claude.sh --continue        # resume the last session
+```
+
 ### Start all dev servers
 
 ```bash

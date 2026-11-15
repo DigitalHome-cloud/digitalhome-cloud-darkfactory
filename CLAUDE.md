@@ -160,6 +160,7 @@ cd ../modeler && yarn develop            # 8002
 
 | Script | Purpose |
 |--------|---------|
+| `start-claude.sh [--continue]` | Start Claude Code here with `../digitalhome-devops-edge` and `../digitalhome-pro-edge` added (`--add-dir`); `--print-command` shows the call |
 | `scripts/dev-start-all.sh` | Preflight checks + start all 3 Gatsby dev servers detached (ports 8000, 8001, 8002). Logs in `/tmp/dhc-*.log` |
 | `scripts/dev-stop-all.sh` | Stop all 3 dev servers started by `dev-start-all.sh` |
 | `scripts/status.sh` | Git status and recent log across all repos |
