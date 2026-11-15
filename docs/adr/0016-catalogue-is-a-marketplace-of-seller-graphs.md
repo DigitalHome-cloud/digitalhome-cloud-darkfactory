@@ -63,14 +63,22 @@ Two things did not fit:
    - This keeps an RDF library out of the Portal's bundle and its lockfile,
      and it keeps the merge rules in one place.
    - The edges keep the full graph protocol, because they edit offline.
-8. **DeviceModel is retired.**
-   - `importDeviceCatalogue` (dhc-admins, once per environment, re-runnable)
-     turns the DeviceModel rows and their `public/catalogue/devices/...` files
-     into the `digitalhome-cloud` graph.
+8. **DeviceModel is retired** (core 0ef31d1).
+   - An import (`importDeviceCatalogue`) was built first, but there was
+     nothing to carry over. The DeviceModel tables of stage and main were
+     empty, and neither bucket had files under `public/catalogue/devices/`
+     (checked 2026-11-15). So the model, its enum, the import and the
+     generated operations in the Portal and the Designer were removed.
+   - The seller `digitalhome-cloud` is created like any other seller, from
+     the Portal's Sellers panel (kind *platform*). Device discovery
+     (`dhc-device-autodiscovery`) brings its CSVs in through the Portal's
+     import, into a seller.
    - `DeviceInstance.article` records the article IRI. `modelNumber` stays
      for display and for older rows.
-   - After the import has run in an environment, the table, its codegen and
-     its env-sync handling are removed.
+   - `public/catalogue/*` keeps its admin-write storage rule, so the broad
+     `public/*` grant does not open it.
+   - env-sync copies the marketplace instead: `MarketSeller` rows,
+     `market/graphs/` and `public/market/`.
 
 ## Consequences
 

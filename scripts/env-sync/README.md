@@ -16,7 +16,7 @@ Run `env_sync.py --help` for the full description.
 
 | Part | What travels |
 |---|---|
-| `reference` | DeviceModel, LibraryItem, Area rows; `public/ontology/`, `public/catalogue/`, `public/weather/` |
+| `reference` | LibraryItem, Area rows; the marketplace (MarketSeller rows, `market/graphs/`, `public/market/`; ADR 0016); `public/ontology/`, `public/weather/` |
 | `groups` | every Cognito group |
 | `users` | the users named with `--user`, created without a password, in the same groups |
 | `homes` | DigitalHome rows with their designs, devices, profiles and S3 files |

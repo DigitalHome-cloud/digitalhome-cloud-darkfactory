@@ -12,8 +12,10 @@ environment's resources are found from the core Amplify app's branch stack.
 
 Parts (--only, default all):
 
-  reference  DeviceModel, LibraryItem, Area rows; S3 public/ontology/,
-             public/catalogue/, public/weather/ (the data lake)
+  reference  LibraryItem, Area rows; the marketplace (MarketSeller rows,
+             their catalogue graphs under market/graphs/ and files under
+             public/market/, ADR 0016); S3 public/ontology/,
+             public/weather/ (the data lake)
   groups     every Cognito group (name, description, precedence)
   users      the users named with --user EMAIL: created in the target pool
              (no password; they use "Forgot password", or --invite sends
@@ -56,8 +58,11 @@ from boto3.dynamodb.types import TypeDeserializer, TypeSerializer
 from botocore.exceptions import ClientError
 
 CORE_APP = "digitalhome-cloud-core"
-REFERENCE_TABLES = ("DeviceModel", "LibraryItem", "Area")
-REFERENCE_PREFIXES = ("public/ontology/", "public/catalogue/", "public/weather/")
+# MarketSeller is a plain CDK table (backend.ts), not an Amplify model; a
+# seller row names its graph's S3 key, so rows and market/graphs/ go together.
+# market/staging/ holds uploads in flight and is never copied.
+REFERENCE_TABLES = ("LibraryItem", "Area", "MarketSeller")
+REFERENCE_PREFIXES = ("public/ontology/", "public/weather/", "market/graphs/", "public/market/")
 HOME_TABLES = ("SmartHomeDesign", "DeviceInstance")          # rows with smartHomeId
 PARTS = ("reference", "groups", "users", "homes")
 
@@ -103,6 +108,8 @@ class Env:
                         self.bucket = pid
                     elif t == "Custom::AmplifyDynamoDBTable" and lid.endswith("Table"):
                         self.tables[lid[:-len("Table")]] = pid
+                    elif t == "AWS::DynamoDB::Table" and lid.startswith("MarketSeller"):
+                        self.tables["MarketSeller"] = pid
         walk(stack)
         if not (self.pool and self.bucket and self.tables):
             sys.exit(f"{branch}: could not find the user pool, bucket and tables in its stack")
