@@ -38,7 +38,8 @@ This DH-SPEC exists to track the **dark-factory-team implementation slice**: Amp
 
 ### 3.1 Amplify Gen2 backend
 
-Four API Gateway HTTP endpoints backed by Lambda + DynamoDB:
+API Gateway HTTP endpoints backed by Lambda + DynamoDB (the first four are the
+registration itself; the others use the link once it exists):
 
 | Endpoint | Auth | Purpose |
 |---|---|---|
@@ -46,6 +47,9 @@ Four API Gateway HTTP endpoints backed by Lambda + DynamoDB:
 | `POST /edge/v1/token` | none (proves `device_code`) | Poll for approval; on approval return `device_token` + `edge_id`. |
 | `POST /edge/v1/telemetry` | Bearer `device_token` | Full + delta heartbeat, returns C-BOX freshness flag. |
 | `POST /edge/v1/token/rotate` | Bearer `device_token` | Rolling refresh; 60 s dual-valid window. |
+| `POST /edge/v1/homes` | Bearer `device_token` | The homes the person who linked the edge may see, with each home's site URL. |
+| `POST /edge/v1/catalogue` | Bearer `device_token` | The global device catalogue (`DeviceModel`), models changed since `since`, paged by `cursor`; returns `now` for the next call. No S3 paths or thumbnails. |
+| `POST /edge/v1/catalogue/put` | Bearer `device_token` | Create or update one model (only the fields sent). Allowed only while the person who linked the edge is in `dhc-admins` with TOTP, asked of Cognito on every call; else 403 `not_allowed`. Unknown fields → 400 `invalid_model`. |
 
 Two DynamoDB tables:
 
