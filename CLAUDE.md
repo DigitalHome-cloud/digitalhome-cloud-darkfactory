@@ -79,6 +79,7 @@ Cognito groups control feature access (defined in `repos/core/amplify/auth/resou
 - `dhc-professional` — paid Designer tier
 - `dhc-standard` — standard Designer tier
 - `dhc-welcome` — auto-assigned to new sign-ups (via `postConfirmation` Lambda trigger)
+- `dhc-template-editors` — write and verify the board templates (ADR 0017); TOTP-protected like `dhc-admins`
 
 ### SmartHome ID
 
@@ -207,6 +208,7 @@ git checkout stage
   - 0012: Modular ontology architecture (Core + Norm Modules)
   - 0013: Platform-agnostic design guide
   - 0016: The device catalogue is a marketplace of seller graphs (DeviceModel retired)
+  - 0017: Board templates are cloud content, one graph per norm edition (graph-store shared with the marketplace)
 
 ## Deployment
 
