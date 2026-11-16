@@ -312,10 +312,17 @@ class Sync:
                 if item.get("smartHomeId") in copied:
                     self.copy_row(model, self.remap(item), keys)
         if "UserProfile" in self.src.tables:
+            # One profile per owner: the Portal has created a new row on some
+            # visits, so a user can have dozens; the newest is the one in use.
             keys = self.src.key_of("UserProfile")
+            newest: Dict[str, dict] = {}
             for item in self.src.scan("UserProfile"):
                 if any(s in json.dumps(item, default=str) for s in mapped):
-                    self.copy_row("UserProfile", self.remap(item), keys)
+                    owner = str(item.get("owner") or item.get("id"))
+                    if str(item.get("updatedAt", "")) >= str(newest.get(owner, {}).get("updatedAt", "")):
+                        newest[owner] = item
+            for item in newest.values():
+                self.copy_row("UserProfile", self.remap(item), keys)
         for hid in copied:
             for prefix in (f"Private/DigitalHomes/{hid}/", f"Public/DigitalHomes/{hid}/",
                            f"tenant/{hid}/", f"public/smarthomes/{hid}/"):
