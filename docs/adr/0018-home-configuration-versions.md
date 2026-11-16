@@ -103,6 +103,22 @@ the address or the name were ever corrected.
 8. **The identity A-Box stays.** `designtime/abox.ttl` is written once by
    `createDigitalHome`. The first live configuration starts from its home
    node, so the live A-Box is the whole home.
+9. **An item's ID card, from a QR label.** (Amended 2026-11-16.) A QR
+   code printed by an edge, on the board or as a small tag inside a
+   socket's or a device's cover, opens
+   `https://<portal>/id/?h=<homeId>&i=<item id>`.
+   - It carries the minted homeId and item id only, never the SmartHome ID,
+     which spells the address. Reading the code tells nothing about the home.
+   - The card reads the graph with the owners' own queries
+     (`homeConfigurations`, `homeConfigurationGraph`), so it shows nothing
+     to anyone else; access rests on sign-in, not on the ids being secret.
+   - It looks in the live version, then the open options ("planned"), then
+     the legacy versions ("no longer live"), and says which.
+   - Each label prints the address in small type, so a sticker put over it
+     can be seen to point elsewhere; the card asks for nothing but the usual
+     sign-in. It always says to switch off, secure and verify before work.
+   - An edge prints no code for a workspace without a home on a linked
+     connection: a link to the edge itself would not open on a phone.
 
 ## Consequences
 

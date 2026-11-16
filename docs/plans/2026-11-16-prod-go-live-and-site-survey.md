@@ -87,6 +87,9 @@ through the edge:
   thumbnail.
 - **Backend:** vault items gain `room`, `circuit`, `pointKind` and `note`, and
   may be a note only.
+- **Starting from a label:** a QR label already opens an item's ID card
+  (`/id/`, ADR 0018 point 9). The survey screen opens from the same card,
+  with that item as its subject.
 - **Pro edge chat:** a tool lists new observations; the chat proposes the
   changes they imply (a point on a circuit in a room, what a circuit feeds),
   and the person confirms each. The phone never changes a design.
