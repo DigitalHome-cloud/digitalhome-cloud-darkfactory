@@ -35,18 +35,23 @@ at a smaller scale.
      presigned GETs from the vault Lambda;
    - private vaults within a home;
    - faces and similarity.
-3. **Grouping by configuration version.**
-   - Every item names the configuration it documents: a version
-     `<homeId>-MMMM-mmmm` (ADR 0018), or a planning option `<homeId>-p01`
-     for photos taken while a plan is being worked on.
-   - When an option is promoted, its items are re-grouped to the new
-     version.
-   - The vault shows one group per version (live, legacy, options). This is
-     metadata, not a folder: where a file came from is kept as its origin
-     only.
+3. **Tagged with configuration versions** (amended 2026-11-16: tags, where
+   there was one group).
+   - Every item carries the configurations it documents as **tags**, one or
+     several: versions `<homeId>-MMMM-mmmm` (ADR 0018), or planning options
+     `<homeId>-p01` for photos taken while a plan is being worked on. A
+     photo of a board unchanged between two versions documents both.
+   - Tags are set on several items at once (a multiple selection), and the
+     vault is filtered by them. A tag must be a version or option of the
+     same home.
+   - When an option is promoted, its tag is replaced by the new version's.
+   - Older rows have one `configVersion`; it is read as their single tag
+     and folded into the tags when they are next tagged.
+   - This is metadata, not a folder: where a file came from is kept as its
+     origin only.
 4. **The catalogue.** `HomeVaultItems` holds one row per (`homeId`,
    `sha256`): kind (photo, document, video, other), name, size, when taken,
-   caption, configuration, and who uploaded it, when. The file is the
+   caption, tags, and who uploaded it, when. The file is the
    source of truth for the content; the row is the source of truth for what
    the file is about.
 5. **Who.**

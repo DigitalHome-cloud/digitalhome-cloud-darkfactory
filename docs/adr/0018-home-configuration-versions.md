@@ -52,6 +52,15 @@ the address or the name were ever corrected.
    digits.
    - Every version is immutable and stays readable. Legacy means "no longer
      live", never "deleted".
+   - **One exception, the withdrawal (amended 2026-11-16):** a live major
+     whose content is the same as the version it replaced may be taken
+     back. Its row and Turtle are removed, the version before it is live
+     again, and the option it came from goes too. It is refused for any
+     version that changed something, for a minor, for a version that is not
+     live, and while a vault item is tagged with it. A promote that would
+     change nothing is refused, so a withdrawal only repairs a promote made
+     before that guard. The withdrawal is recorded on the home's HEAD row
+     (`lastWithdrawn`), and a person confirms it.
    - A home's first live configuration is `-0001-0000`. It is made once, from
      a survey or a first design, and only while the home has no version.
 4. **Planning options.** A home has zero or more options (`<homeId>-p01`,
