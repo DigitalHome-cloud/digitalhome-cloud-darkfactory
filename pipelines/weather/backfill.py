@@ -47,27 +47,37 @@ def existing_counts(table):
 
 
 def run(product, start_iso):
+    counts = existing_counts(PRODUCTS[product][2])
+    grand = 0
+    for area in load_areas():
+        grand += backfill_area(product, area, start_iso, counts)
+    print(f"[{product}] complete: added {grand} rows -> {PRODUCTS[product][2]}\n")
+
+
+def backfill_area(product, area, start_iso=None, counts=None, past_only=False):
+    """One area's history, year by year, skipping complete past years.
+    past_only: not the current year (the daily window keeps that one)."""
     ingest, default_start, table = PRODUCTS[product]
     start_iso = start_iso or default_start
     today = date.today()
-    counts = existing_counts(table)
-    grand = 0
-    for area in load_areas():
-        aid = area["areaId"]
-        area_total = 0
-        for c_start, c_end in year_chunks(start_iso, today):
-            yr = int(c_start[:4])
-            # Skip complete past years; always refresh the current (growing) year.
-            if yr < today.year and counts.get((aid, yr), 0) >= FULL_YEAR_ROWS:
+    counts = existing_counts(table) if counts is None else counts
+    aid = area["areaId"]
+    area_total = 0
+    for c_start, c_end in year_chunks(start_iso, today):
+        yr = int(c_start[:4])
+        if past_only and yr == today.year:
+            continue
+        # Skip complete past years; always refresh the current (growing) year.
+        if yr < today.year and counts.get((aid, yr), 0) >= FULL_YEAR_ROWS:
+            if not past_only:
                 print(f"  [{product}] {aid:<10} {yr}  skip (present)")
-                continue
-            n = ingest(area, c_start, c_end)
-            area_total += n
-            print(f"  [{product}] {aid:<10} {yr}  {n:>5} rows")
-            time.sleep(2)
-        print(f"= [{product}] {aid} added {area_total} rows")
-        grand += area_total
-    print(f"[{product}] complete: added {grand} rows -> {table}\n")
+            continue
+        n = ingest(area, c_start, c_end)
+        area_total += n
+        print(f"  [{product}] {aid:<10} {yr}  {n:>5} rows")
+        time.sleep(2)
+    print(f"= [{product}] {aid} added {area_total} rows")
+    return area_total
 
 
 if __name__ == "__main__":

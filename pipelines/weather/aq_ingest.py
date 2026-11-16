@@ -9,14 +9,9 @@ import sys
 import pandas as pd
 
 from config import (AIR_QUALITY_TABLE, AIR_QUALITY_URL, AIR_QUALITY_VARS,
-                    AREAS_FILE)
+                    load_areas)  # noqa: F401 (re-exported)
 from fetch_openmeteo import request_json  # shared GET-json + 429 backoff
 from lake_io import write_partitioned
-
-
-def load_areas():
-    with open(AREAS_FILE) as f:
-        return json.load(f)
 
 
 def fetch_aq(area, start_date, end_date):

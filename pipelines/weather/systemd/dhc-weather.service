@@ -1,0 +1,18 @@
+# Daily weather run for every backend that has an env file in /etc/dhc-weather/
+# (stage.env, main.env …), one after the other so Open-Meteo is not hit twice
+# at once. Each env file names that backend's lake, gold prefix and Area table
+# (see example.env); areas added in the Portal are picked up on the next run.
+# The timer is dhc-weather.timer (05:30).
+[Unit]
+Description=DigitalHome weather pipeline — daily ingest + gold recompute + S3 upload, per backend
+Wants=network-online.target docker.service
+After=network-online.target docker.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/dhc-weather/host.env
+ExecStart=/usr/bin/docker run --rm --env-file /etc/dhc-weather/stage.env -v ${AWS_DIR}:/root/.aws:ro dhc-weather-pipeline
+ExecStart=/usr/bin/docker run --rm --env-file /etc/dhc-weather/main.env -v ${AWS_DIR}:/root/.aws:ro dhc-weather-pipeline
+
+[Install]
+WantedBy=multi-user.target

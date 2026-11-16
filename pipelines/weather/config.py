@@ -60,3 +60,53 @@ AIR_QUALITY_TABLE = f"{LAKE_ROOT.rstrip('/')}/air_quality"      # pollution
 PARTITION_BY = ["area_id", "year"]
 
 AREAS_FILE = os.path.join(os.path.dirname(__file__), "areas.json")
+
+# ── Which areas ───────────────────────────────────────────────────────────────
+# AREA_TABLE names one backend's DynamoDB Area table (Area-<api id>-NONE): the
+# areas an administrator keeps in the Portal (Areas page). Every run reads it,
+# so an area added there is picked up on the next run, with its history. Not
+# set (a local run), areas.json is the list.
+AREA_TABLE = os.environ.get("AREA_TABLE", "").strip()
+
+
+def _area_table():
+    import boto3
+    return boto3.resource("dynamodb").Table(AREA_TABLE)
+
+
+def load_areas():
+    """[{areaId, country, postalCode, name, latitude, longitude, timezone}]"""
+    if not AREA_TABLE:
+        import json
+        with open(AREAS_FILE) as f:
+            return json.load(f)
+    table, items, kw = _area_table(), [], {}
+    while True:
+        page = table.scan(**kw)
+        items += page.get("Items", [])
+        if "LastEvaluatedKey" not in page:
+            break
+        kw["ExclusiveStartKey"] = page["LastEvaluatedKey"]
+    areas = []
+    for it in items:
+        try:
+            lat, lon = float(it["latitude"]), float(it["longitude"])
+        except (KeyError, TypeError, ValueError):
+            print(f"[areas] {it.get('areaId')}: no coordinates, skipped", flush=True)
+            continue
+        areas.append({"areaId": str(it["areaId"]), "country": str(it.get("country") or ""),
+                      "postalCode": str(it.get("postalCode") or ""), "name": str(it.get("name") or it["areaId"]),
+                      "latitude": lat, "longitude": lon, "timezone": str(it.get("timezone") or "UTC")})
+    return sorted(areas, key=lambda a: a["areaId"])
+
+
+def mark_ingested(area_id, when_iso):
+    """Record on the area's row when its data was last brought up to date
+    (the Portal shows it). Read, then put back: the row keeps every field."""
+    if not AREA_TABLE:
+        return
+    table = _area_table()
+    item = table.get_item(Key={"areaId": area_id}).get("Item")
+    if item:
+        item["lastIngestedAt"] = when_iso
+        table.put_item(Item=item)

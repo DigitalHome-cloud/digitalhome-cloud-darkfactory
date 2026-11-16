@@ -21,6 +21,17 @@ pyarrow. Provider: **Open-Meteo** historical archive (ERA5) — free, no API key
 - `manifest.json` — column → Brick class + QUDT unit
 
 ## Daily run (Docker — spare PC now, ECS Fargate later)
+
+**Which areas:** with `AREA_TABLE` set (the backend's DynamoDB `Area` table),
+every run reads the areas an administrator keeps on the Portal's Areas page.
+An area with no data yet gets its whole history (weather from 2000, air
+quality from 2013) before the daily window, and each area's `lastIngestedAt`
+is set after a run. Without `AREA_TABLE` (a local run), `areas.json` is the
+list.
+
+**On the spare PC:** `systemd/dhc-weather.service` runs the container once per
+backend, from `/etc/dhc-weather/stage.env` and `main.env` (see
+`systemd/example.env`); `dhc-weather.timer` starts it daily at 05:30.
 ```bash
 docker build -t dhc-weather-pipeline pipelines/weather
 docker run --rm \

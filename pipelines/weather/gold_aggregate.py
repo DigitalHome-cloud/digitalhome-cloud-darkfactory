@@ -20,7 +20,7 @@ import pvlib
 from deltalake import DeltaTable
 from scipy import stats
 
-from config import AIR_QUALITY_TABLE, AREAS_FILE, OBSERVATIONS_TABLE
+from config import AIR_QUALITY_TABLE, OBSERVATIONS_TABLE, load_areas
 
 GOLD_DIR = os.path.join(os.path.dirname(__file__), "gold")
 PR = 0.75                        # PV performance ratio
@@ -224,12 +224,15 @@ def write_json(path, obj):
 
 
 def main():
-    areas = json.load(open(AREAS_FILE))
+    areas = load_areas()
     index = []
     for area in areas:
         aid = area["areaId"]
         print(f"  {aid} …", flush=True)
         wdf = load_area_weather(aid)
+        if wdf.empty:
+            print(f"    no weather yet, skipped", flush=True)
+            continue
         aqdf = load_area_aq(aid)
         wmax = wdf["time"].max()
         aqmax = aqdf["time"].max() if aqdf is not None else None
