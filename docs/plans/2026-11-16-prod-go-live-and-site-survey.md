@@ -85,8 +85,9 @@ through the edge:
 - **Saved as** a vault item under the option, with its room, circuit, kind
   and note; a note without a photo is allowed. The phone makes the
   thumbnail.
-- **Backend:** vault items gain `room`, `circuit`, `pointKind` and `note`, and
-  may be a note only.
+- **Backend:** as built, the subject is in vault tags (`survey`, `item:`,
+  `kind:`, `room:`) and the note is the caption; a note alone is a small
+  Markdown file. Blank QR tags, bound on site, are ADR 0018 point 10.
 - **Starting from a label:** a QR label already opens an item's ID card
   (`/id/`, ADR 0018 point 9). The survey screen opens from the same card,
   with that item as its subject.
