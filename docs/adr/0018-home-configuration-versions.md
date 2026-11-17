@@ -120,6 +120,27 @@ the address or the name were ever corrected.
    - An edge prints no code for a workspace without a home on a linked
      connection: a link to the edge itself would not open on a phone.
 
+10. **Blank tags, bound on site.** (Amended 2026-11-17.) A code printed
+    for an item always names it; a survey needs one stuck on before anyone
+    knows the item, or before the design has it. A blank tag opens
+    `https://<portal>/id/?t=<tagId>`.
+    - The tag id (`t-` and ten letters or digits, random) is minted for one
+      home, by its owners or an edge that reaches it. The HomeTags table
+      keeps which item it stands for; the code holds nothing else.
+    - The first scan binds it: to an item of the survey's open option (else
+      the live version), or to an observation `obs-…` of something the
+      design lacks. It can be bound again; the row keeps the earlier
+      bindings. Bound, it opens the item's card.
+    - Only the home's owners resolve or bind a tag, with the same check as
+      the card; an edge binds only tags of a home it reaches.
+    - Photos and notes taken from a card go to the vault (ADR 0019), tagged
+      `survey`, `item:<id>`, `kind:<kind>` and `room:<name>`: ids and short
+      words, never an address. A note alone is a small Markdown file.
+    - The phone never changes a design. The pro edge's chat lists the
+      observations and proposes what each implies; once the person
+      confirms and the item exists, the observation's photos and its tag
+      follow the item.
+
 ## Consequences
 
 - The T3's 1986 survey becomes its first live configuration, `-0001-0000`. The
