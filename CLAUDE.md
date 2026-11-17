@@ -211,6 +211,7 @@ git checkout stage
   - 0017: Board templates are cloud content, one graph per norm edition (graph-store shared with the marketplace)
   - 0018: A home has one live configuration, planning options and legacy versions (`<homeId>-MMMM-mmmm`; a minted, meaningless `homeId`)
   - 0019: A home vault for photos and documents, grouped by configuration version
+  - 0020: Two kinds of edge: a pro edge serves a person's homes (no home link), a devops edge one home
 
 ## Deployment
 
