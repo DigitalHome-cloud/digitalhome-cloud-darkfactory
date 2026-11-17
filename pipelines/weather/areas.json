@@ -1,0 +1,29 @@
+[
+  {
+    "areaId": "DE-39576",
+    "country": "DE",
+    "postalCode": "39576",
+    "name": "Stendal",
+    "latitude": 52.6061,
+    "longitude": 11.8585,
+    "timezone": "Europe/Berlin"
+  },
+  {
+    "areaId": "FR-12400",
+    "country": "FR",
+    "postalCode": "12400",
+    "name": "Saint-Victor-et-Melvieu",
+    "latitude": 43.9800,
+    "longitude": 2.8600,
+    "timezone": "Europe/Paris"
+  },
+  {
+    "areaId": "BE-1160",
+    "country": "BE",
+    "postalCode": "1160",
+    "name": "Bruxelles (Auderghem)",
+    "latitude": 50.8127,
+    "longitude": 4.4332,
+    "timezone": "Europe/Brussels"
+  }
+]

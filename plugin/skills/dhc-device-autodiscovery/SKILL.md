@@ -1,15 +1,15 @@
 ---
 name: dhc-device-autodiscovery
-description: Discover physical smart-home devices from on-site gateways (the OpenCCU XML API and a Philips Hue bridge on the site's LAN) and emit catalogue-compatible inventory CSVs plus catalogue images uploaded to the platform's shared S3 bucket. Trigger this skill for "auto-discover devices", "fetch inventory from CCU", "scan the Hue bridge", "add a new device type to the catalogue", "rerun the inventory", "upload device images to S3", or when extending `build_inventory_from_openccu.py`, `build_inventory_from_huebridge.py`, `download_device_images.py`, or `upload_catalogue_images.py` under `experimental/catalogue/`. Do NOT trigger for live catalogue CRUD via the Designer UI (that is the DeviceModelForm flow), nor for the A-Box / SmartHome instance work that lives in the Designer's design page.
+description: Discover physical smart-home devices from on-site gateways (the OpenCCU XML API and a Philips Hue bridge on the site's LAN) and emit inventory CSVs (the Portal's import format) plus product images, which go into a seller's catalogue on the digitalhome.cloud marketplace (ADR 0016). Trigger this skill for "auto-discover devices", "fetch inventory from CCU", "scan the Hue bridge", "add a new device type to the catalogue", "rerun the inventory", "put the discovered devices into the marketplace", or when extending `build_inventory_from_openccu.py`, `build_inventory_from_huebridge.py`, `download_device_images.py`, `upload_market_images.py`, or `upload_catalogue_images.py` under `experimental/catalogue/`. Do NOT trigger for editing single marketplace articles in the Portal (Inventory → Marketplace), nor for the A-Box / SmartHome instance work that lives in the Designer's design page.
 ---
 
 # DHC Device Auto-Discovery
 
-This skill owns the **physical-device discovery → catalogue CSV → S3 image**
-pipeline that lives under `experimental/catalogue/`. It exists so that a real
+This skill owns the **physical-device discovery → inventory CSV + images →
+marketplace** pipeline that lives under `experimental/catalogue/`. It exists so that a real
 site (currently DLAB5, but designed to generalise) can produce ready-to-import
-catalogue rows and matching product images without hand-typing each model into
-`DeviceModelForm`.
+marketplace articles and matching product images without hand-typing each
+model into the Portal's article form.
 
 ## When to use this skill
 
@@ -19,16 +19,16 @@ Trigger on any of:
 - "Fetch the inventory from the CCU / Hue bridge / KNX line."
 - "Add a new device type to the catalogue."
 - "Re-run the inventory now that we paired a new Hue light."
-- "Upload the catalogue images to S3."
+- "Upload the catalogue images" / "bulk-upload the device images into the marketplace."
 - "Why is `HmIP-XYZ` showing up as `Unknown` brand?"
 - Edits to any file in `experimental/catalogue/build_inventory_*.py`,
-  `download_device_images.py`, `upload_catalogue_images.py`, the per-site
+  `download_device_images.py`, `upload_market_images.py`, the per-site
   CSVs, or `images/`.
 
 Do **not** trigger for:
 
-- Editing `repos/designer/src/components/DeviceModelForm.js` or
-  `DeviceCatalogue.js` (live catalogue CRUD via the Designer UI).
+- Editing `repos/portal/src/components/DeviceModelForm.js` or
+  `DeviceCatalogue.js` (the Portal's Marketplace tab).
 - A-Box / instance-data work (devices placed in a SmartHome design — that's
   the Designer's design page, not the catalogue).
 - Editing the T-Box (Brick + DHC-core ontology — use
@@ -41,7 +41,8 @@ experimental/catalogue/
   build_inventory_from_openccu.py    # HomeMatic CCU3 (<ccu-host>)
   build_inventory_from_huebridge.py  # Philips Hue bridge (<hue-host>)
   download_device_images.py          # pulls device PNGs from the CCU
-  upload_catalogue_images.py         # pushes images to shared S3 catalogue
+  upload_market_images.py            # bulk images/datasheets into a seller's articles (marketUploads)
+  upload_catalogue_images.py         # RETIRED: wrote public/catalogue/, nothing reads it
   device-inventory-DLAB5.csv         # CCU rows, one per physical device
   device-inventory-DLAB5-hue.csv     # Hue rows: the lights and the bridge
   device-inventory-template.csv      # schema reference (do not modify)
@@ -71,7 +72,8 @@ MEDIA_COMMUNICATION, SECURITY_MONITORING
 Sub-type labels per category are listed in `DEVICE_CATEGORIES[*].subTypes[*].label`.
 When you add a new device type to either catalogue dict, the
 `(category, deviceType)` pair **must** match those constants — that's what
-`DeviceModelForm.js` writes back and what the S3 image key uses.
+the Portal's article form writes back and what the marketplace stores as
+`dhp:category` / `dhp:deviceType` (the shapes allow only the known categories).
 
 ## Canonical mapping cheat sheet (current)
 
@@ -134,24 +136,57 @@ python3 build_inventory_from_huebridge.py \
 # 3) Pull the CCU-shipped product images (sourced from /config/img/devices/250/):
 python3 download_device_images.py --output-dir images
 
-# 4) Push everything to the shared S3 catalogue:
-python3 upload_catalogue_images.py \
-    --csv device-inventory-DLAB5.csv \
-    --csv device-inventory-DLAB5-hue.csv \
-    [--dry-run]
 ```
 
-Outputs land at:
+### 4) Into the marketplace
 
-```
-s3://<bucket-from-amplify_outputs.json>/public/catalogue/devices/
-    <deviceType>/<modelNumber>/img/cover.<ext>
-```
+The device catalogue is the **marketplace** (ADR 0016): one catalogue graph
+per seller, edited by that seller's editors (Cognito group `market-<seller>`,
+with an authenticator app). The old `DeviceModel` table and its
+`public/catalogue/devices/…` files are retired, so **`upload_catalogue_images.py`
+has no reader any more — do not run it.**
 
-This is exactly the path `uploadCatalogueAsset(deviceType, modelNumber,
-"img", "cover.<ext>", ...)` in `repos/designer/src/utils/s3.js` writes to,
-so when an admin opens the Designer's catalogue manager and adds a model with
-matching `(category, deviceType, modelNumber)`, the image is already present.
+1. The CSVs are already in the Portal's import format (same columns as
+   `repos/portal/src/utils/csvTemplate.js`). In the Portal: Inventory →
+   **Import**, upload the CSV, then **Stage 1** saves each model as an
+   article of a seller you edit (usually `digitalhome-cloud`, the curated
+   catalogue; a dhc-admin creates it under Marketplace → **Sellers**, kind
+   *platform*, and names its editors). Stage 2 then records the devices of
+   the active home, each pointing at its article's IRI.
+2. Images: in the Stage 1 form (or later, Marketplace → Modify) pick the PNG
+   from `images/`. The Portal uploads it by its SHA-256 to
+   `public/market/<seller>/sha256/<hash>.png`; the first image is the
+   thumbnail. A file the seller already has is not sent again.
+
+3. **Many images at once:** `upload_market_images.py` does what the form
+   does, for every file. It reads the seller's articles (`marketArticles`),
+   asks for grants by content (`marketUploads`), PUTs only what the seller
+   does not have (each PUT is bound to the file's SHA-256), then names the
+   files on the articles (`editMarketArticle`, the fact-level merge). PDFs go
+   to `datasheet`, images to `image`, appended after existing images unless
+   `--cover` makes the new one the thumbnail. A file the article already
+   names is skipped, so a rerun changes nothing.
+
+   ```bash
+   cd experimental/catalogue
+   python3 upload_market_images.py --seller digitalhome-cloud \
+       --csv device-inventory-DLAB5.csv --csv device-inventory-DLAB5-hue.csv \
+       --images images --dry-run          # then again without --dry-run
+   ```
+
+   Files map to articles through the CSV's `modelNumber` → `imageUrl`, and/or
+   `--images DIR` with files named `<reference>.<ext>` (exact, else
+   case-insensitive). Articles must exist (step 1); unknown references are
+   reported as MISS. The backend comes from `repos/portal/src/amplify_outputs.json`
+   (`--outputs` for another).
+
+   **Sign-in:** the script takes the **refresh token** of a Portal session
+   (`$DHC_REFRESH_TOKEN`, `--token-file`, or a hidden prompt), never a password
+   or TOTP code. The user copies it from the browser's Local Storage key
+   `CognitoIdentityServiceProvider.<clientId>.<user>.refreshToken`. Never ask
+   for it in chat, put it on a command line or in a tracked file. If the token
+   lacks `market-<seller>`, the user is not an editor yet, has no
+   authenticator app, or signed in before being added.
 
 ## Gateway gotchas
 
@@ -171,7 +206,7 @@ matching `(category, deviceType, modelNumber)`, the image is already present.
   `download_device_images.py::CCU_IMAGE_FILENAME` because the typecode is not
   derivable from the `device_type` string. Eight HmIP/HM types currently lack
   a CCU-shipped image — drop a manually-sourced PNG into `images/<device_type>.png`
-  and the upload script will pick it up on next run.
+  and `upload_market_images.py --images images` will pick it up on the next run.
 
 ### Philips Hue (<hue-host>)
 
@@ -199,22 +234,23 @@ empty fields:
    Use the cheat sheet above as default.
 4. Add a Brick `compatibleClasses` value (semicolon-separated). The Brick
    class hierarchy lives in `repos/core/schema/tbox/Brick+extensions.ttl`.
-5. Re-run the relevant fetcher. The CSV refreshes and the next
-   `upload_catalogue_images.py` pass picks up any new images.
+5. Re-run the relevant fetcher, then import the refreshed CSV (step 4). An
+   article that already exists opens prefilled in Stage 1; saving merges
+   your change into the seller's current catalogue.
 
 When a new CCU `device_type` ships an image:
 
 1. Find the filename in `https://github.com/jens-maus/occu/tree/master/WebUI/www/config/img/devices/250/`.
 2. Add the mapping to `CCU_IMAGE_FILENAME` in `download_device_images.py`.
-3. Re-run `download_device_images.py` then `upload_catalogue_images.py`.
+3. Re-run `download_device_images.py` and attach the new image to the
+   article (step 4, or `upload_market_images.py`).
 
 ## Non-goals
 
-- **Persisting devices to the DeviceModel table via AppSync** — by design.
-  This skill stops at S3 images + CSV. Admin users register catalogue rows
-  through `DeviceModelForm` in the Designer UI; the image they would normally
-  pick up via `<input type="file">` is already at the canonical S3 path, so
-  the form save just writes the DDB row.
+- **Writing the marketplace directly** — by design. This skill stops at the
+  CSV and the local images; a seller's editor brings them in through the
+  Portal or `upload_market_images.py` (step 4) — both go through the market
+  Lambda, where the merge, the SHACL shapes and the version checks apply. Never write `market/graphs/` or `public/market/` in S3 by hand.
 - **A-Box / instance-data writes** — instance rows belong to the SmartHome
   design owned by the Designer's design page.
 - **Per-tenant or per-SmartHome inventory uploads** — the `--smarthome-id`
@@ -227,11 +263,13 @@ When a new CCU `device_type` ships an image:
 
 ## Related skills and code
 
-- **DeviceModelForm.js** — interactive catalogue authoring; remembers the
+- **Portal `DeviceModelForm.js` / `utils/market.js`** — the article form
+  and the marketplace calls; the form remembers the
   last-used `Category` + `Device type` in-session
   (`lastUsedCategory` / `lastUsedDeviceType` module locals).
-- **`dhc-amplify-gen2`** skill — when extending the S3 storage rule or the
-  `DeviceModel` GraphQL schema (e.g. adding new columns that this discovery
-  flow should fill).
+- **`dhc-amplify-gen2`** skill — when extending the marketplace: the
+  vocabulary and SHACL shapes in `repos/core/schema/market/` (a new fact this
+  discovery flow should fill goes there first, then
+  `scripts/sync-market-shapes.mjs`).
 - **`dhc-ontology-explorer`** skill — when changing what `compatibleClasses`
   values are even valid (Brick + DHC-core ontology authoring).

@@ -28,8 +28,9 @@ We created `digitalhome-cloud-darkfactory` as an **umbrella repo using git submo
 - Application repos are submodules under `repos/` (portal, designer, modeler)
 - Platform docs, specs, ADRs, and scripts live at the top level
 - `CLAUDE.md` provides the master guide for Claude Code, pointing to each sub-repo's CLAUDE.md
-- Helper scripts (`sync-env.sh`, `dev-start-all.sh`, `dev-stop-all.sh`, `status.sh`, `pull-all.sh`) operate across all repos
-- The umbrella owns the single `amplify/` directory; per-repo copies are symlinks created by `sync-env.sh`
+- Helper scripts (`dev-start-all.sh`, `dev-stop-all.sh`, `status.sh`, `pull-all.sh`) operate across all repos
+- The umbrella owned the single `amplify/` directory (**see 2026-05 Update — the
+  Gen 2 backend now lives in the `repos/core` submodule**)
 
 ## Consequences
 
@@ -46,3 +47,24 @@ We created `digitalhome-cloud-darkfactory` as an **umbrella repo using git submo
 - Git submodules have a learning curve — `git submodule update` is easy to forget
 - Submodule pointers must be updated when sub-repos advance (manual step or CI)
 - Nested git repos can confuse some IDE tools
+
+## Update (2026-05-15): Amplify Gen 2 backend relocated into `repos/core`
+
+The original decision had the **umbrella** own the single `amplify/` directory
+(with `sync-env.sh` symlinking it per app — Gen 1 era). That no longer holds:
+
+- The Amplify **Gen 2** backend now lives in the **`repos/core` submodule**
+  (`repos/core/amplify/`), with its own `amplify.yml`, `package.json`, and
+  `tsconfig.json`. The umbrella root has **no** `amplify/` / `package.json` /
+  `tsconfig.json`.
+- Reason: an `amplify/` at the umbrella root *and* a submodule that Amplify
+  Hosting builds caused "amplify on two levels of a repo" tooling conflicts.
+  Consolidating to one `amplify/` level (owned by `core`) resolves them.
+- `sync-env.sh` and the `aws-exports.js` symlink/codegen flow were removed (Gen
+  1 leftovers). Apps now commit `src/amplify_outputs.json`; CI pulls it via
+  `npx ampx generate outputs`.
+- Negative consequence reinforced: a backend change is now a `repos/core`
+  commit **plus** an umbrella submodule-pointer bump — two steps, easy to
+  forget the second.
+
+See ADR 0003 (Gen 2 backend) and `docs/architecture/amplify-backend.md`.

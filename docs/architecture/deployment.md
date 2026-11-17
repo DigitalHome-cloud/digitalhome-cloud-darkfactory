@@ -43,15 +43,18 @@ git push origin stage
 | **Designer** | `npm install` → `gatsby build` | Static site (with local block JSON fallback) |
 | **Modeler** | `npm install` → `parse-ontology` → `generate-blockly-toolbox` → `gatsby build` | Static site with ontology graph + block definitions baked in |
 
-The portal also installs the Amplify CLI during build (it owns the
-backend). Designer and modeler are frontend-only builds.
+The Amplify Gen 2 backend is **not** built by any of these apps. It deploys
+from its own backend-only Amplify Hosting app on `repos/core`
+(`repos/core/amplify.yml` → `npx ampx pipeline-deploy`). Portal, Designer, and
+Modeler are frontend-only builds that pull the deployed backend config via
+`npx ampx generate outputs` in `preBuild`.
 
 ### What Is Manual
 
 | Action | How | When |
 |--------|-----|------|
 | Merge `stage` → `main` | `git merge` or PR | After stage validation, to promote to production |
-| Amplify backend changes | `amplify push` from portal repo (local CLI with admin creds) | Schema changes, new Lambda functions, auth config |
+| Amplify backend changes | Edit `repos/core/amplify/*`, commit + push `repos/core` → `npx ampx pipeline-deploy` runs automatically | Schema changes, new Lambda functions, auth config |
 | Submodule pointer updates | Commit in umbrella repo after sub-repo pushes | After sub-repo changes to keep umbrella in sync |
 
 ### Typical Workflow
@@ -237,7 +240,7 @@ dhc:hasCircuit             myHome:LivingRoom dhc:hasCircuit myHome:Circuit1
 | **T-Box → S3** | `yarn publish-ontology` (local creds) | Admin uses `/publish/` page | Admin uses `/publish/` page |
 | **A-Box read/write** | S3 (same bucket, same data) | S3 (same bucket) | S3 (same bucket) |
 | **Ontology source** | Local fallback (`src/data/`) if S3 fails | S3 (`ontology/latest/`), error if fails | S3 (`ontology/latest/`), error if fails |
-| **Backend changes** | `amplify push` from portal repo | Auto (portal Amplify manages backend) | Auto (portal Amplify manages backend) |
+| **Backend changes** | Push `repos/core` (sandbox locally) | Auto (`repos/core` Hosting runs `ampx pipeline-deploy`) | Auto (`repos/core` Hosting runs `ampx pipeline-deploy`) |
 | **Cross-app nav** | `localhost:800x` (auto-detected) | `stage-*.digitalhome.cloud` | `*.digitalhome.cloud` |
 
 ---
@@ -259,7 +262,7 @@ dhc:hasCircuit             myHome:LivingRoom dhc:hasCircuit myHome:Circuit1
 | T-Box publish to S3 (JSON) | `dhc-admins` member | Modeler `/publish/` page | After each modeler deploy with ontology changes |
 | T-Box publish to S3 (TTL) | Developer | `yarn publish-ontology` (local AWS creds) | When TTL/context.jsonld files need updating on S3 |
 | Stage → Prod promotion | Developer | Merge `stage` → `main` + push | After stage validation |
-| Backend schema changes | Developer | `amplify push` from portal repo | Per schema change |
+| Backend schema changes | Developer | Edit `repos/core/amplify/`, push `repos/core` (auto `ampx pipeline-deploy`) | Per schema change |
 | Umbrella submodule sync | Developer | Commit updated pointers in umbrella | After sub-repo pushes |
 
 ### Known Gaps

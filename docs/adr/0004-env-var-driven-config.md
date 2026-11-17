@@ -2,7 +2,12 @@
 
 ## Status
 
-Accepted
+**Superseded (2026-05-15).** This ADR describes the Amplify **Gen 1**
+`aws-exports.js` → `aws-exports.deployment.js` env-var bridge. Under Amplify
+Gen 2 (ADR 0003) each app commits `src/amplify_outputs.json` (public IDs) and
+imports it directly — there is no `aws-exports.js`, no generator script, and no
+`sync-env.sh`. `.env.development` survives **only** for cross-app URLs
+(`GATSBY_PORTAL_URL` etc.). The content below is historical.
 
 ## Date
 

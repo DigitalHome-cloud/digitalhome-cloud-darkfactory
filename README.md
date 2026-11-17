@@ -20,9 +20,8 @@ git submodule update --init --recursive
 | Portal | `repos/portal/` | 8000 | [portal.digitalhome.cloud](https://portal.digitalhome.cloud) |
 | Designer | `repos/designer/` | 8001 | [designer.digitalhome.cloud](https://designer.digitalhome.cloud) |
 | Modeler | `repos/modeler/` | 8002 | [modeler.digitalhome.cloud](https://modeler.digitalhome.cloud) |
-| Digital Twin Demo | `repos/digital-twin-demo/` | — | [GitHub](https://github.com/DigitalHome-cloud/dhc-digital-twin-demo) |
 
-All apps are Gatsby 5 / React 18 static sites sharing a common AWS Amplify Gen1 backend (Cognito, AppSync, DynamoDB, S3).
+All apps are Gatsby 5 / React 18 static sites sharing a common AWS Amplify **Gen 2** backend (Cognito, AppSync, DynamoDB, S3), defined in TypeScript in the `repos/core` submodule (`repos/core/amplify/`).
 
 ## Development
 
@@ -34,11 +33,21 @@ All apps are Gatsby 5 / React 18 static sites sharing a common AWS Amplify Gen1 
 (cd repos/designer && yarn install)
 (cd repos/modeler && yarn install)
 
-# Pull Amplify backend config (once, at umbrella root)
-amplify pull
+# Boot the Amplify Gen 2 backend (the backend lives in repos/core)
+(cd repos/core && npm install && npx ampx sandbox --once)
 
-# Symlink amplify/ + aws-exports.js into each repo, generate .env.development, run codegen
-./scripts/sync-env.sh
+# Seed each app's src/amplify_outputs.json from the sandbox output
+# (dev-start-all.sh also does this automatically)
+for app in portal designer modeler; do
+  cp repos/core/amplify_outputs.json "repos/$app/src/"
+done
+```
+
+### Start Claude Code
+
+```bash
+./start-claude.sh                   # here, with ../digitalhome-devops-edge and ../digitalhome-pro-edge added
+./start-claude.sh --continue        # resume the last session
 ```
 
 ### Start all dev servers
@@ -64,13 +73,16 @@ tail -f /tmp/dhc-*.log              # follow logs
 
 ### Re-sync after backend changes
 
-After `amplify pull` or switching branches with backend changes:
+After a backend change (sandbox redeploy or `git pull` with new outputs):
 
 ```bash
-./scripts/sync-env.sh
+(cd repos/core && npx ampx sandbox --once)
+for app in portal designer modeler; do
+  cp repos/core/amplify_outputs.json "repos/$app/src/"
+done
 ```
 
-This re-symlinks `amplify/` and `aws-exports.js`, regenerates `.env.development`, and runs `amplify codegen` to update GraphQL types.
+This regenerates `repos/core/amplify_outputs.json` from the Gen 2 stack and propagates the public Cognito/AppSync/S3 IDs into each app. In CI each app's Hosting build pulls them with `npx ampx generate outputs` instead. See the `dhc-amplify-gen2` skill for the full workflow.
 
 ## Documentation
 
