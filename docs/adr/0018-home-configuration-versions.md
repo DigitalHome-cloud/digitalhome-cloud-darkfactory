@@ -140,6 +140,14 @@ the address or the name were ever corrected.
       observations and proposes what each implies; once the person
       confirms and the item exists, the observation's photos and its tag
       follow the item.
+    - **QR or NFC, or both.** An NFC sticker holds the same link in one NDEF
+      URL record, and any NFC phone opens it without an app. The ID card
+      shows its link as a QR code, writes it to a tag (Chrome on Android,
+      Web NFC) or copies it for a writer app, and makes a new tag for the
+      item either way. A written tag is locked, so nobody can put another
+      link on it; rebinding stays in the cloud. A tag holds no more than a
+      code, and one link only, so a spot has either an ID tag or a devops
+      edge control tag (its panel spec, "NFC tags"), never both on one chip.
 
 ## Consequences
 
